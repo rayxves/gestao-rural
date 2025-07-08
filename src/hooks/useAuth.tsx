@@ -235,6 +235,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('auth_token');
     localStorage.removeItem('auth_token_expiry');
     localStorage.removeItem('gestao_rural_user_id'); // Remover user_id no logout
+    const storedData = localStorage.getItem('collaborator_data');
+    if (storedData) {
+        localStorage.removeItem('collaborator_data');
+   }
     setUser(null);
     navigate('/');
     console.log('Logout realizado, tokens removidos, user_id limpo');
