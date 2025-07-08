@@ -16,10 +16,12 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const { isCollaborator, collaboratorData, isLoading: collaboratorLoading } = useCollaboratorSession();
   const location = useLocation();
 
-  // Verificar se há user_id na URL
   const urlParams = new URLSearchParams(location.search);
   const userIdFromUrl = urlParams.get('user_id');
   const hasUserIdInUrl = !!(userIdFromUrl || userId);
+
+  console.log(userIdFromUrl);
+   console.log(hasUserIdInUrl);
 
   const isLoading = authLoading || collaboratorLoading;
 
