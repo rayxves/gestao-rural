@@ -20,8 +20,6 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const userIdFromUrl = urlParams.get('user_id');
   const hasUserIdInUrl = !!(userIdFromUrl || userId);
 
-  console.log(userIdFromUrl);
-   console.log(hasUserIdInUrl);
 
   const isLoading = authLoading || collaboratorLoading;
 
