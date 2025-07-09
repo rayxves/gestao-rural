@@ -7,6 +7,8 @@ import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2 } from 'luci
 import { useToast } from '@/hooks/use-toast';
 import { useUserSession } from '@/hooks/useUserSession';
 import { useCollaboratorSession } from '@/hooks/useCollaboratorSession';
+import { supabase } from '@/integrations/supabase/client';
+
 
 interface ErrorMessage {
   linha: Record<string, any>;
@@ -78,33 +80,30 @@ const ExcelUploadForm = () => {
       const formData = new FormData();
       formData.append('data', file);
       
-      if (isCollaborator && collaboratorData) {
-        // Para colaboradores, usar o user_id do produtor
-        const { data: producer } = await fetch(`/api/supabase`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            table: 'usuario',
-            action: 'select',
-            filters: { id: collaboratorData.produtorId }
-          })
-        }).then(r => r.json());
-
-        if (producer && producer.length > 0) {
-          formData.append('user_id', producer[0].user_id);
-          formData.append('registrado_por', collaboratorData.username);
-        } else {
+     if (isCollaborator && collaboratorData) {
+        const { data: producer, error } = await supabase
+          .from('usuario')
+          .select('user_id')
+          .eq('id', collaboratorData.produtorId)
+          .limit(1)
+          .single();
+      
+        if (error || !producer) {
           toast({
             title: "Erro",
             description: "Não foi possível identificar o produtor vinculado",
             variant: "destructive"
           });
+          setIsUploading(false);
           return;
         }
+      
+        formData.append('user_id', producer.user_id);
+        formData.append('registrado_por', collaboratorData.username);
       } else {
-        // Para produtores, usar o user_id normal
         formData.append('user_id', userId!);
       }
+
 
       console.log('Enviando arquivo para API...');
       console.log('Tipo de usuário:', isCollaborator ? 'Colaborador' : 'Produtor');
