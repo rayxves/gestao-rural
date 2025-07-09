@@ -1,0 +1,526 @@
+{
+  "name": "Fazer_resumo_semana",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "edc57c67-2de2-48e4-82e0-23456c569bcd",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json }}",
+        "options": {
+          "systemMessage": "Você é uma IA especializada em agricultura e deve gerar um relatório semanal somente com base nos dados fornecidos abaixo.\n\nSe nenhum dado for enviado, responda claramente que não há registros salvos para esta semana.\n\nSe apenas algumas categorias estiverem disponíveis (como só \"colheitas\" ou só \"gastos\"), gere o relatório com base somente nelas, e mencione com naturalidade que não houve registros nas demais categorias.\n\nNunca invente dados.\n\nO relatório deve ser em formato de texto corrido, com um tom informativo, direto, leve e interessante de ler — como se estivesse conversando com um produtor rural experiente.\n\nAnalise e destaque os pontos mais importantes da semana, como:\n\nQual foi a cultura mais plantada e o total de área plantada por cultura.\n\nQual cultura foi mais colhida e a quantidade total colhida.\n\nO que foi vendido, quanto foi vendido e o valor total das vendas por cultura.\n\nOs tipos de gastos realizados e o valor total gasto.\n\nSe possível, apresente conclusões ou sugestões simples, como:\n\"milho foi o destaque da semana\", ou \"houve um gasto significativo com adubo\".\n\n⚠️ Importante:\n\nRetorne SOMENTE o TEXTO do relatório.\n\nNão repita os dados brutos e não use formato JSON.\n\nIgnore totalmente categorias que não foram enviadas, mas se perceber a ausência delas, você pode mencioná-las brevemente com frases como:\n\n“Não houve registros de plantios nesta semana.”\n\n“Nenhum gasto foi registrado nos últimos dias.”\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        2440,
+        0
+      ],
+      "id": "5ec70730-a9c3-45dd-8da7-de94f187caae",
+      "name": "AI _que_gera_relatorios",
+      "executeOnce": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('When Executed by Another Workflow').first().json.result.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2880,
+        -120
+      ],
+      "id": "32b483c2-99c1-4d09-a967-1791654caedb",
+      "name": "mensagem_relatorio_semanal",
+      "webhookId": "5176e8ec-27c5-49df-b6e6-6903a60c1fc7",
+      "executeOnce": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "iuLO2FKzmR3ohEKO",
+          "name": "GestaoRuralBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n    *\nFROM\n    colheita\nWHERE\n   user_id = {{ $('When Executed by Another Workflow').first().json.result.chat.id }}::TEXT\n    AND (EXTRACT(EPOCH FROM data_colheita::timestamp) * 1000) >= {{ new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).getTime() }};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1560,
+        0
+      ],
+      "id": "2fbc60bf-50cb-4cbe-b63f-8ecee3969d16",
+      "name": "pega_colheita_semana",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n    *\nFROM\n    venda\nWHERE\n   user_id = {{ $('When Executed by Another Workflow').first().json.result.chat.id }}::TEXT\n    AND (EXTRACT(EPOCH FROM data_venda::timestamp) * 1000) >= {{ new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).getTime() }};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1100,
+        0
+      ],
+      "id": "dab25eb7-2548-4e0a-ae60-1069bad0c709",
+      "name": "pega_venda_semana",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n    *\nFROM\n    gasto\nWHERE\n    user_id = {{ $('When Executed by Another Workflow').first().json.result.chat.id }}::TEXT\n    AND (EXTRACT(EPOCH FROM data_gasto::timestamp) * 1000) >= {{ new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).getTime() }};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        660,
+        0
+      ],
+      "id": "cdba0a11-a5aa-4e9b-b3eb-3c4a8c0fe86d",
+      "name": "pega_gasto_semana",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2400,
+        160
+      ],
+      "id": "7d7a9059-8463-4a02-a0df-99f41f017c7f",
+      "name": "Google Gemini Chat Model4",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "sTS9JfuVz7vC4JXq",
+          "name": "ray"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "historico_gestao_rural",
+          "mode": "list",
+          "cachedResultName": "historico_gestao_rural"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "chat_id",
+              "value": "={{ $json.result.chat.id.toString() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3140,
+        -120
+      ],
+      "id": "88ed072f-81bb-4628-bbf8-3fa30f2a8abb",
+      "name": "deletar_historico_atual3",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.teste.onlinecenter.com.br/webhook/erro",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "={{ $('When Executed by Another Workflow').first().json.result.chat.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2840,
+        80
+      ],
+      "id": "028f7c8c-161c-4fb4-8c20-375cbd6a15d4",
+      "name": "request_erro1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n    *\nFROM\n    plantio\nWHERE\n    user_id = {{ $json.result.chat.id.toString() }}::TEXT\n    AND (EXTRACT(EPOCH FROM data_plantio::timestamp) * 1000) >= {{ new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).getTime() }};\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        260,
+        0
+      ],
+      "id": "47db207f-f84e-4fb0-a7b8-01a453fbfd7f",
+      "name": "pega_plantio_semana",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "if (!items || items.length === 0 || (items.length === 1 && Object.keys(items[0].json).length === 0)) {\n  return [];\n}\n\n\nconst plantios = items.map(item => item.json);\nconst resultado = {};\n\nfor (const plantio of plantios) {\n  const cultura = plantio.cultura?.toLowerCase().trim() || 'não especificada';\n  const area = parseFloat(plantio.area_plantada) || 0;\n\n  if (!resultado[cultura]) {\n    resultado[cultura] = 0;\n  }\n\n  resultado[cultura] += area;\n}\n\nconst agrupado = Object.entries(resultado).map(([cultura, total_area]) => ({\n  json: { cultura, total_area }\n}));\n\nreturn agrupado;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        0
+      ],
+      "id": "24766851-5379-4fb1-bb4b-639fb4116064",
+      "name": "agrupa_plantio",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "if (!items || items.length === 0 || (items.length === 1 && Object.keys(items[0].json).length === 0)) {\n  return [];\n}\n\n\nconst gastos = items.map(item => item.json);\nconst resultado = {};\n\nfor (const gasto of gastos) {\n  const tipo = gasto.tipo_gasto?.toLowerCase().trim() || 'não especificado';\n  const valor = parseFloat(gasto.valor) || 0;\n\n  if (!resultado[tipo]) {\n    resultado[tipo] = 0;\n  }\n\n  resultado[tipo] += valor;\n}\n\nconst agrupado = Object.entries(resultado).map(([tipo_gasto, total_valor]) => ({\n  json: { tipo_gasto, total_valor }\n}));\n\nreturn agrupado;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        0
+      ],
+      "id": "7ba88eae-4d7c-45ee-b085-2188398e6aff",
+      "name": "agrupa_gasto",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "if (!items || items.length === 0 || (items.length === 1 && Object.keys(items[0].json).length === 0)) {\n  return [];\n}\n\n\nconst vendas = items.map(item => item.json);\nconst resultado = {};\n\nfor (const venda of vendas) {\n  const cultura = venda.cultura?.toLowerCase().trim() || 'não especificada';\n  const quantidade = parseFloat(venda.quantidade) || 0;\n  const valor = parseFloat(venda.valor_total) || 0;\n\n  if (!resultado[cultura]) {\n    resultado[cultura] = { total_quantidade: 0, total_valor: 0 };\n  }\n\n  resultado[cultura].total_quantidade += quantidade;\n  resultado[cultura].total_valor += valor;\n}\n\nconst agrupado = Object.entries(resultado).map(([cultura, valores]) => ({\n  json: {\n    cultura,\n    total_quantidade: valores.total_quantidade,\n    total_valor: valores.total_valor\n  }\n}));\n\nreturn agrupado;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        0
+      ],
+      "id": "ae844733-2058-42ae-ae6d-2611c4908b7a",
+      "name": "agrupa_venda",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "if (!items || items.length === 0 || (items.length === 1 && Object.keys(items[0].json).length === 0)) {\n  return [];\n}\n\n\nconst colheitas = items.map(item => item.json);\nconst resultado = {};\n\nfor (const colheita of colheitas) {\n  const cultura = colheita.cultura?.toLowerCase().trim() || 'não especificada';\n  const quantidade = parseFloat(colheita.quantidade) || 0;\n\n  if (!resultado[cultura]) {\n    resultado[cultura] = 0;\n  }\n\n  resultado[cultura] += quantidade;\n}\n\nconst agrupado = Object.entries(resultado).map(([cultura, total_colhida]) => ({\n  json: { cultura, total_colhida }\n}));\n\nreturn agrupado;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1780,
+        0
+      ],
+      "id": "d2d4a40b-d644-4af4-8dc1-c6c10980d57c",
+      "name": "agrupa_colheita",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "function limpar(arr) {\n  return arr.filter(obj => Object.keys(obj).length > 0);\n}\n\nconst plantios = limpar($('agrupa_plantio').all().map(i => i.json));\nconst colheitas = limpar($('agrupa_colheita').all().map(i => i.json));\nconst gastos = limpar($('agrupa_gasto').all().map(i => i.json));\nconst vendas = limpar($('agrupa_venda').all().map(i => i.json));\n\nconst resultado = {};\n\nif (plantios.length > 0) {\n  resultado.plantios = plantios;\n}\nif (colheitas.length > 0) {\n  resultado.colheitas = colheitas;\n}\nif (gastos.length > 0) {\n  resultado.gastos = gastos;\n}\nif (vendas.length > 0) {\n  resultado.vendas = vendas;\n}\n\nreturn Object.keys(resultado).length > 0 ? [{ json: resultado }] : [];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2020,
+        0
+      ],
+      "id": "32914065-7277-4030-a72d-65794f8540f2",
+      "name": "agrupa_todos_os_dados"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $execution.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        2540,
+        220
+      ],
+      "id": "81c870fb-56e2-4d9c-8cce-088c83aa029c",
+      "name": "Redis Chat Memory",
+      "credentials": {
+        "redis": {
+          "id": "m7wYmICeKCBuPLw3",
+          "name": "Redis account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "ok": true,
+          "result": {
+            "message_id": 3312,
+            "from": {
+              "id": 8018971565,
+              "is_bot": true,
+              "first_name": "gestao_rural_bot",
+              "username": "gestao_rural_bot"
+            },
+            "chat": {
+              "id": 1990031044,
+              "first_name": "ray",
+              "type": "private"
+            },
+            "date": 1751712575,
+            "text": "🤖 Estamos preparando o seu resumo..."
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "AI _que_gera_relatorios": {
+      "main": [
+        [
+          {
+            "node": "mensagem_relatorio_semanal",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "request_erro1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mensagem_relatorio_semanal": {
+      "main": [
+        [
+          {
+            "node": "deletar_historico_atual3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "pega_colheita_semana": {
+      "main": [
+        [
+          {
+            "node": "agrupa_colheita",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "pega_venda_semana": {
+      "main": [
+        [
+          {
+            "node": "agrupa_venda",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "pega_gasto_semana": {
+      "main": [
+        [
+          {
+            "node": "agrupa_gasto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI _que_gera_relatorios",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "pega_plantio_semana",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "pega_plantio_semana": {
+      "main": [
+        [
+          {
+            "node": "agrupa_plantio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "agrupa_plantio": {
+      "main": [
+        [
+          {
+            "node": "pega_gasto_semana",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "agrupa_gasto": {
+      "main": [
+        [
+          {
+            "node": "pega_venda_semana",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "agrupa_venda": {
+      "main": [
+        [
+          {
+            "node": "pega_colheita_semana",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "agrupa_colheita": {
+      "main": [
+        [
+          {
+            "node": "agrupa_todos_os_dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "agrupa_todos_os_dados": {
+      "main": [
+        [
+          {
+            "node": "AI _que_gera_relatorios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI _que_gera_relatorios",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3e733f2c-0ddd-453e-94a4-9e06ea68d1ee",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9aab45911b97299333480ee93b3a756a301732a8d3c5c2882e1becb4b9fe223a"
+  },
+  "id": "NqQuD8FVXeXozBfj",
+  "tags": []
+}

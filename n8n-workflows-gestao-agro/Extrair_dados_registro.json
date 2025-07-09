@@ -1,0 +1,249 @@
+{
+  "name": "Extrair_dados_registro",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "extrair_dados",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -40,
+        0
+      ],
+      "id": "381acb20-8520-44f8-93d3-1c7f20907f36",
+      "name": "Webhook",
+      "webhookId": "c9766c57-7f89-43d6-b8b4-9de68637a8a5"
+    },
+    {
+      "parameters": {
+        "jsCode": "let output = $input.first().json.output;\n\noutput = output.replace(/```json|```/g, '').trim();\n\nlet parsed;\ntry {\n  parsed = JSON.parse(output);\n} catch (e) {\n  return [{\n    json: {\n      erro: \"A resposta da IA não está em JSON válido mesmo após a limpeza.\",\n      conteudo_original: output\n    }\n  }];\n}\n\nif (!parsed.tool || !parsed.text) {\n  return [{\n    json: {\n      erro: \"Campos obrigatórios 'tool' ou 'text' ausentes.\",\n      conteudo: parsed\n    }\n  }];\n}\n\nconst result = {\n  tool: parsed.tool,\n  text: parsed.text\n};\n\nif (parsed.dados) {\n  result.dados = parsed.dados;\n}\n\nreturn [{ json: result }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        920,
+        -20
+      ],
+      "id": "96775bee-b1ec-4248-a08c-2cac01005a93",
+      "name": "extrair_dados_ia"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Webhook').first().json.body.text }}",
+        "options": {
+          "systemMessage": "Você é uma assistente agrícola inteligente. Sua função é extrair dados da mensagem do usuário e gerar uma mensagem de confirmação.\n\n🎯 Objetivo da tarefa:\n\nExtrair corretamente os campos obrigatórios conforme o tipo de registro.\n\nValidar se todos os dados obrigatórios estão presentes e estão no formato correto.\n\nRetornar os dados extraídos + a mensagem de confirmação em formato JSON válido.\n\n❗ Não salve nada. Não envie mensagens diretamente. Apenas prepare os dados.\n\n📋 Campos obrigatórios e tipos esperados por tipo de registro:\n\nPlantio\n\ncultura: texto\n\ndata_plantio: data no formato DD/MM/AAAA\n\narea_plantada: número\n\nColheita\n\ncultura: texto\n\ndata_colheita: data no formato DD/MM/AAAA\n\nquantidade: número\n\nVenda\n\ncultura: texto\n\ndata_venda: data no formato DD/MM/AAAA\n\nquantidade: número\n\nvalor_total: número\n\nGasto\n\ntipo: texto\n\ndata_gasto: data no formato DD/MM/AAAA\n\nvalor: número\n\ndescricao: texto (opcional)\n\nSe a descrição estiver ausente ou for algo como \"sem descrição\", defina \"descricao\": null\n\nInsumo\n\nnome: texto\n\ntipo: texto\n\nquantidade: número\n\npreco_unitario: número\n\nTrabalho\n\ndescricao: texto\n\nresponsavel: texto\n\ncusto: número (ignore palavras como \"R$\", \"reais\", etc.)\n\n🚫 Ignore unidades como \"hectares\", \"R$\", \"kg\", \"litros\", \"sacas\", etc.\n\n📌 Sobre a propriedade (regra obrigatória):\n\nO campo \"propriedade_id\" sempre deve estar presente nos dados e pode ser null.\n\nO usuário nunca informa o ID da propriedade diretamente.\n\nSe o nome da propriedade for informado:\n\nInclua o campo \"propriedade_nome\" com o nome\n\nDefina \"propriedade_id\": null\n\nSe o nome da propriedade não for informado:\n\nDefina \"propriedade_id\": null\n\nNão inclua o campo propriedade_nome\n\nA mensagem de confirmação para o usuário deve mencionar o nome da propriedade apenas se ele tiver sido informado.\n\nNunca mencione \"propriedade_id\" ou qualquer número de ID para o usuário.\n\n📤 Formato obrigatório da resposta:\n\njson\nCopiar\nEditar\n{\n  \"tool\": \"enviar_mensagem_usuario\",\n  \"text\": \"🌱 Confirme os dados:\\n\\n<resumo dos dados extraídos em texto>\\n\\nDigite *sim* para confirmar ou *não* para corrigir.\",\n  \"dados\": {\n    <dados extraídos, com os campos obrigatórios e propriedade_id>\n  }\n}\n📌 Exemplo com nome da propriedade informado:\n\njson\nCopiar\nEditar\n{\n  \"tool\": \"enviar_mensagem_usuario\",\n  \"text\": \"🌱 Confirme os dados:\\n\\nCultura: soja\\nData: 21/06/2025\\nÁrea: 10 hectares\\nPropriedade: Fazenda Santa Luzia\\n\\nDigite *sim* para confirmar ou *não* para corrigir.\",\n  \"dados\": {\n    \"cultura\": \"soja\",\n    \"data_plantio\": \"21/06/2025\",\n    \"area_plantada\": 10,\n    \"propriedade_nome\": \"Fazenda Santa Luzia\",\n    \"propriedade_id\": null\n  }\n}\n📌 Exemplo sem nome da propriedade informado:\n\njson\nCopiar\nEditar\n{\n  \"tool\": \"enviar_mensagem_usuario\",\n  \"text\": \"🌱 Confirme os dados:\\n\\nCultura: soja\\nData: 21/06/2025\\nÁrea: 10 hectares\\n\\nDigite *sim* para confirmar ou *não* para corrigir.\",\n  \"dados\": {\n    \"cultura\": \"soja\",\n    \"data_plantio\": \"21/06/2025\",\n    \"area_plantada\": 10,\n    \"propriedade_id\": null\n  }\n}\n❗ Restrições Importantes\nPara qualquer mensagem que não contenha dados de registro. Isso inclui saudações (\"Oi\", \"Olá\", \"bom dia\"), conversas casuais (\"kkk\", \"tudo bem?\"), pedidos para editar ou excluir registros, ou qualquer outra solicitação que não seja o fornecimento de dados para um dos tipos de registro especificados, retorne:\n{\n\"tool\": \"\"\n}\n\n❗Caso o usuario não informe todos os dados necessários ou informe dados incompletos, por exemplo: \"plantei milho 25/06 10 hectares\" faltou informar o ano, ou \"plantei milho 10 hectares\" faltou informar a data, quando isso ocorrer retorne uma mensagem informando quais os dados que precisam ser informados. Exemplo:\n{\n\"tool\": \"\",\n\"text\": \"Campo data é obrigatório, por favor, envie os dados novamente no formato correto\".\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        460,
+        0
+      ],
+      "id": "8c926b11-0bac-4964-a954-73cf6f4d0c08",
+      "name": "AI_que_extrai_dados_registro",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        460,
+        220
+      ],
+      "id": "910ba0b2-0bca-4f31-b52a-25ba8af9fa06",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "sTS9JfuVz7vC4JXq",
+          "name": "ray"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').first().json.body.chat_id }}",
+        "tableName": "dados_extraidos_chat_histories"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        560,
+        240
+      ],
+      "id": "f86d4a66-e042-439b-98bd-61e4f20f258b",
+      "name": "Postgres Chat Memory1",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1140,
+        -20
+      ],
+      "id": "2f4966eb-b83f-4ead-b38d-10cd21b72b14",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "dados_extraidos_chat_histories",
+          "mode": "list",
+          "cachedResultName": "dados_extraidos_chat_histories"
+        },
+        "deleteCommand": "delete",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1340,
+        -20
+      ],
+      "id": "78b00b71-c573-4fd3-9986-97acf6a207b9",
+      "name": "Postgres",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "api.teste.onlinecenter.com.br",
+            "user-agent": "axios/1.8.3",
+            "content-length": "115",
+            "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+            "accept-encoding": "gzip, compress, deflate, br",
+            "content-type": "application/json",
+            "x-forwarded-for": "172.18.0.1",
+            "x-forwarded-host": "api.teste.onlinecenter.com.br",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "fd2d6166e5b9",
+            "x-real-ip": "172.18.0.1"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "text": "Vendi milho em 05/07/2025, 50 sacas por 3000 reais na propriedade fazenda da rayssa",
+            "chat_id": 6517023574
+          },
+          "webhookUrl": "https://api.teste.onlinecenter.com.br/webhook/extrair_dados",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "AI_que_extrai_dados_registro": {
+      "main": [
+        [
+          {
+            "node": "extrair_dados_ia",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI_que_extrai_dados_registro",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI_que_extrai_dados_registro",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI_que_extrai_dados_registro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extrair_dados_ia": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9205f51a-5bf9-42fd-909b-87ee47568bc0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9aab45911b97299333480ee93b3a756a301732a8d3c5c2882e1becb4b9fe223a"
+  },
+  "id": "FfTkeKzYGwmiLB6f",
+  "tags": []
+}

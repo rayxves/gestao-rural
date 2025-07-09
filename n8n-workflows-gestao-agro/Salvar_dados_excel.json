@@ -1,0 +1,1601 @@
+{
+  "name": "Salvar_dados_excel",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "excel-upload",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -20,
+        0
+      ],
+      "id": "fd3bf238-f43c-40e1-8f62-85f70c8ee767",
+      "name": "Webhook",
+      "webhookId": "c644e01b-7d63-4fbd-901d-922a572ea381"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {
+          "rawData": true
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        240,
+        0
+      ],
+      "id": "9a94d580-baf2-401e-9137-08e011ba11ff",
+      "name": "extrai_dados_excel"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.registros }}",
+        "options": {
+          "systemMessage": "Você é um classificador inteligente de registros agrícolas.\n\nSua função é:\n\nIdentificar automaticamente o tipo de registro baseado nos campos recebidos de uma planilha Excel.\n\nReformatar os dados para o formato correto, de acordo com o tipo identificado.\n\nCertificar-se de manter a data no formato: DD/MM/YYYY\n\n📥 Entrada esperada:\nVocê receberá um JSON com os campos e valores extraídos da planilha. Por exemplo:\n\njson\nCopiar\nEditar\n{\n  \"cultura\": \"milho\",\n  \"data\": \"22/05/2025\",\n  \"area\": 20\n}\n📤 Saída esperada:\nVocê deve retornar apenas um JSON no seguinte formato:\n\njson\nCopiar\nEditar\n{\n  \"tool\": \"plantio\",\n  \"dados\": {\n    \"cultura\": \"milho\",\n    \"data_plantio\": \"22/05/2025\",\n    \"area_plantada\": 20\n  }\n}\n🎯 Regras de identificação:\n🟢 PLANTIO:\nCampos esperados: cultura, data ou data_plantio, area ou area_plantada\n\nCampos no resultado: cultura, data_plantio, area_plantada\n\n🟡 COLHEITA:\nCampos esperados: cultura, data ou data_colheita, quantidade\n\nCampos no resultado: cultura, data_colheita, quantidade\n\n🔵 VENDA:\nCampos esperados: cultura, data ou data_venda, quantidade, valor_total\n\nCampos no resultado: cultura, data_venda, quantidade, valor_total\n\n🔴 GASTO:\nCampos esperados: tipo_gasto ou tipo, data_gasto, valor, descricao (opcional)\n\nCampos no resultado: tipo_gasto, data_gasto, valor, descricao (opcional)\n\n🟣 INSUMO:\nCampos esperados: nome_insumo, tipo, quantidade, preco_unitario\n\nCampos no resultado: nome_insumo, tipo, quantidade, preco_unitario\n\n⚒️ TRABALHO:\nCampos esperados: descricao, responsavel, custo (opcional)\n\nCampos no resultado: descricao, responsavel, custo (opcional)\n\n\n🧩 Regras adicionais:\nSe os campos não forem suficientes para determinar claramente o tipo de registro, retorne:\n\njson\nCopiar\nEditar\n{\n  \"erro\": \"Não foi possível identificar o tipo de registro com os campos enviados.\"\n}\nSe o campo data estiver com formato inválido, retorne:\n\njson\nCopiar\nEditar\n{\n  \"erro\": \"O campo data precisa estar no formato DD/MM/YYYY.\"\n}\nCaso exista um campo com nome propriedade, propriedade_nome ou nome_propriedade, normalize o campo como:\n\n\"propriedade_nome\": \"nome da fazenda\"\n\nCaso exista o campo registrado_por na entrada, copie ele para o objeto dados no JSON de saída.\n✅ Exemplo de entrada com propriedade e registrado_por:\n\n{\n  \"cultura\": \"soja\",\n  \"data\": \"01/06/2025\",\n  \"area\": 15,\n  \"nome_propriedade\": \"Fazenda da Rayssa\",\n  \"registrado_por\": \"usuario123\"\n}\n✅ Saída esperada:\n\n{\n  \"tool\": \"plantio\",\n  \"dados\": {\n    \"cultura\": \"soja\",\n    \"data_plantio\": \"01/06/2025\",\n    \"area_plantada\": 15,\n    \"propriedade_nome\": \"Fazenda da Rayssa\",\n    \"registrado_por\": \"usuario123\"\n  }\n}\n\n\n❗ Nunca adicione explicações, mensagens ou comentários fora do JSON.\n\n❗ Sempre retorne o JSON limpo com o nome da tool e o objeto dados.\n\n✅ Exemplo de entrada com propriedade:\njson\nCopiar\nEditar\n{\n  \"cultura\": \"soja\",\n  \"data\": \"01/06/2025\",\n  \"area\": 15,\n  \"nome_propriedade\": \"Fazenda da Rayssa\"\n}\n✅ Saída esperada:\n\njson\nCopiar\nEditar\n{\n  \"tool\": \"plantio\",\n  \"dados\": {\n    \"cultura\": \"soja\",\n    \"data_plantio\": \"01/06/2025\",\n    \"area_plantada\": 15,\n    \"propriedade_nome\": \"Fazenda da Rayssa\"\n  }\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        760,
+        0
+      ],
+      "id": "d05551bd-3d86-44f1-8f37-afe7dfb92475",
+      "name": "AI_que_classifica_registros",
+      "executeOnce": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const registros = [];\n\nfor (const item of items) {\n  const dados = item.json;\n  const registroFormatado = {};\n\n  for (const chave in dados) {\n    if (\n      chave !== \"id\" &&\n      chave !== \"user_id\" &&\n      chave !== \"chat_id\"\n    ) {\n      registroFormatado[chave] = dados[chave];\n    }\n  }\n\n  registros.push(registroFormatado);\n}\n\nreturn [{\n  json: {\n    registros: registros\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        0
+      ],
+      "id": "36992e6c-5587-4f5d-8240-f50de6edc2cb",
+      "name": "retorna_dados_formatados"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.erro }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    },
+                    "id": "6f0830ae-9424-4bff-b55f-780ab8c2134a"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "erro"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "dcffeeb3-663c-4631-be3e-294ffd6a59c5",
+                    "leftValue": "={{ $json.tabela }}",
+                    "rightValue": "={{ 'plantio' }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "plantio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "be2225a2-92e1-406a-9717-fd410968e577",
+                    "leftValue": "={{ $json.tabela }}",
+                    "rightValue": "={{'colheita'}}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "colheita"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f428d120-f864-4e0e-98a3-37b08b33d737",
+                    "leftValue": "={{ $json.tabela }}",
+                    "rightValue": "={{ 'venda' }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "venda"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b3837bff-f127-412f-a049-c0453321e298",
+                    "leftValue": "={{ $json.tabela }}",
+                    "rightValue": "={{ 'gasto' }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "gasto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1c27cb5e-8a79-4fde-b639-b817b4b79f58",
+                    "leftValue": "={{ $json.tabela }}",
+                    "rightValue": "={{ 'insumo' }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "insumo"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "4b9edeaa-722f-4bcf-b7f9-e216e1bbd404",
+                    "leftValue": "={{ $json.tabela }}",
+                    "rightValue": "={{ 'trabalho' }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "trabalho"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        2620,
+        -100
+      ],
+      "id": "5370442e-963d-485f-86a9-7e546f138c9e",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "plantio",
+          "mode": "list",
+          "cachedResultName": "plantio"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('Webhook').first().json.body.user_id.toString() }}",
+            "cultura": "={{ $json.cultura }}",
+            "data_plantio": "={{ $json.data_plantio }}",
+            "area_plantada": "={{ $json.area_plantada }}",
+            "propriedade_id": "={{ $json.propriedade_id }}",
+            "registrado_por": "={{ $json.registrado_por }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cultura",
+              "displayName": "cultura",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_plantio",
+              "displayName": "data_plantio",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "area_plantada",
+              "displayName": "area_plantada",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "propriedade_id",
+              "displayName": "propriedade_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "registrado_por",
+              "displayName": "registrado_por",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2840,
+        -220
+      ],
+      "id": "1e90415f-ab3f-48c1-9695-d523311ab158",
+      "name": "salva_dados_plantio",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"mensagem\": \"Dados de plantio registrados com sucesso.\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        3100,
+        -260
+      ],
+      "id": "1d20d3e1-3be3-4daa-9f7e-b5cbc9bab1c0",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "colheita",
+          "mode": "list",
+          "cachedResultName": "colheita"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('Webhook').first().json.body.user_id.toString() }}",
+            "cultura": "={{ $json.cultura }}",
+            "data_colheita": "={{ $json.data_colheita }}",
+            "quantidade": "={{ $json.quantidade }}",
+            "propriedade_id": "={{ $json.propriedade_id }}",
+            "registrado_por": "={{ $json.registrado_por }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cultura",
+              "displayName": "cultura",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_colheita",
+              "displayName": "data_colheita",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "quantidade",
+              "displayName": "quantidade",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "propriedade_id",
+              "displayName": "propriedade_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "registrado_por",
+              "displayName": "registrado_por",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2980,
+        -120
+      ],
+      "id": "cbf2cf6f-83b4-4e54-a9c4-918d572f4475",
+      "name": "salva_dados_colheita",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"mensagem\": \"Dados de colheita registrados com sucesso.\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        3180,
+        -100
+      ],
+      "id": "39b3b47d-3371-4592-a46f-3719efb5d2ed",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "venda",
+          "mode": "list",
+          "cachedResultName": "venda"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('Webhook').first().json.body.user_id.toString() }}",
+            "cultura": "={{ $json.cultura }}",
+            "data_venda": "={{ $json.data_venda }}",
+            "quantidade": "={{ $json.quantidade }}",
+            "valor_total": "={{ $json.valor_total }}",
+            "propriedade_id": "={{ $json.propriedade_id }}",
+            "registrado_por": "={{ $json.registrado_por }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cultura",
+              "displayName": "cultura",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_venda",
+              "displayName": "data_venda",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "quantidade",
+              "displayName": "quantidade",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "valor_total",
+              "displayName": "valor_total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "propriedade_id",
+              "displayName": "propriedade_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "registrado_por",
+              "displayName": "registrado_por",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3000,
+        -20
+      ],
+      "id": "78636bd0-b777-4b68-9f70-e2cdd78317cf",
+      "name": "salva_dados_venda",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"mensagem\": \"Dados de venda registrados com sucesso.\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        3200,
+        20
+      ],
+      "id": "db1fce3f-b026-4b9b-85c9-c5c6b5ef6ba7",
+      "name": "Respond to Webhook3"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "gasto",
+          "mode": "list",
+          "cachedResultName": "gasto"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('Webhook').first().json.body.user_id.toString() }}",
+            "valor": "={{ $json.valor }}",
+            "tipo": "={{ $json.tipo_gasto }}",
+            "data_gasto": "={{ $json.data_gasto }}",
+            "descricao": "={{ $json.descricao ?? null }}",
+            "propriedade_id": "={{ $json.propriedade_id }}",
+            "registrado_por": "={{ $json.registrado_por }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tipo",
+              "displayName": "tipo",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "valor",
+              "displayName": "valor",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_gasto",
+              "displayName": "data_gasto",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "descricao",
+              "displayName": "descricao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "propriedade_id",
+              "displayName": "propriedade_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "registrado_por",
+              "displayName": "registrado_por",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3220,
+        140
+      ],
+      "id": "94bdd497-16f1-4b6b-9b7e-e1e80b2c3192",
+      "name": "salva_dados_gasto",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"mensagem\": \"Dados de gasto registrados com sucesso.\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        3360,
+        140
+      ],
+      "id": "7d7a35e9-0d8d-410e-ac24-fce7c5eebd68",
+      "name": "Respond to Webhook4"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"erro\": true,\n  \"mensagem\": \"Um erro interno ocorreu. Tente novamente mais tarde.\"\n}",
+        "options": {
+          "responseCode": 500
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1100,
+        160
+      ],
+      "id": "ea8acc60-12a7-4d21-8135-163f84e68160",
+      "name": "erro_interno"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"erro\": {{$json.erro}},\n  \"mensagem\": \"{{$json.mensagem}}\"\n}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2800,
+        -380
+      ],
+      "id": "b55e7d79-6f35-49fa-a2b1-5f79dca0da8a",
+      "name": "erro_formato_planilha"
+    },
+    {
+      "parameters": {
+        "jsCode": "let outputString = items[0].json.output;\n\noutputString = outputString.replace(/```json|```/g, '').trim();\n\nlet registros = [];\n\ntry {\n  const parsed = JSON.parse(outputString);\n  registros = Array.isArray(parsed) ? parsed : [parsed];\n} catch (e) {\n  return [{\n    json: {\n      erro: true,\n      mensagem: \"❌ A resposta da IA está mal formatada ou ainda está como texto com múltiplos JSONs colados.\"\n    }\n  }];\n}\n\nif (registros && typeof registros === 'object' && !Array.isArray(registros) && registros.erro) {\n  return [{\n    json: {\n      erro: true,\n      mensagem:  `${registros.erro}`\n    }\n  }];\n}\n\nconst saida = [];\n\nfunction formatarDataBRparaISO(dataTexto) {\n  if (!dataTexto || typeof dataTexto !== 'string') return dataTexto;\n\n  const partes = dataTexto.split('/');\n  if (partes.length !== 3) return dataTexto;\n\n  const [dia, mes, ano] = partes;\n  return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;\n}\n\nfor (const item of registros) {\n  const { tool, dados } = item;\n\n  if (!tool || !dados) {\n    saida.push({\n      json: {\n        erro: true,\n        mensagem: \"❗ Registro sem 'tool' ou 'dados' encontrado.\",\n        itemOriginal: item\n      }\n    });\n    continue;\n  }\n\n  const listaDados = Array.isArray(dados) ? dados : [dados];\n\n  for (const d of listaDados) {\n    const propriedade = d.propriedade_nome ?? null;\n    const registradoPor = d.registrado_por;\n\n    const comum = {\n      ...(registradoPor && { registrado_por: registradoPor }),\n      propriedade_nome: propriedade\n    };\n\n    switch (tool) {\n      case \"plantio\":\n        saida.push({\n          json: {\n            tabela: \"plantio\",\n            cultura: d.cultura,\n            data_plantio: formatarDataBRparaISO(d.data_plantio),\n            area_plantada: d.area_plantada,\n            ...comum\n          }\n        });\n        break;\n\n      case \"colheita\":\n        saida.push({\n          json: {\n            tabela: \"colheita\",\n            cultura: d.cultura,\n            data_colheita: formatarDataBRparaISO(d.data_colheita),\n            quantidade: d.quantidade,\n            ...comum\n          }\n        });\n        break;\n\n      case \"venda\":\n        saida.push({\n          json: {\n            tabela: \"venda\",\n            cultura: d.cultura,\n            data_venda: formatarDataBRparaISO(d.data_venda),\n            quantidade: d.quantidade,\n            valor_total: d.valor_total,\n            ...comum\n          }\n        });\n        break;\n\n      case \"gasto\":\n        saida.push({\n          json: {\n            tabela: \"gasto\",\n            tipo_gasto: d.tipo_gasto,\n            data_gasto: formatarDataBRparaISO(d.data_gasto),\n            valor: d.valor,\n            descricao: d.descricao && d.descricao.toLowerCase() !== \"sem descrição\"\n              ? d.descricao\n              : null,\n            ...comum\n          }\n        });\n        break;\n\n      case \"insumo\":\n        saida.push({\n          json: {\n            tabela: \"insumo\",\n            nome_insumo: d.nome_insumo,\n            tipo: d.tipo,\n            quantidade: d.quantidade,\n            preco_unitario: d.preco_unitario,\n            ...comum\n          }\n        });\n        break;\n\n      case \"trabalho\":\n        saida.push({\n          json: {\n            tabela: \"trabalho\",\n            descricao: d.descricao,\n            responsavel: d.responsavel,\n            custo: d.custo ?? null,\n            ...comum\n          }\n        });\n        break;\n\n      default:\n        saida.push({\n          json: {\n            erro: true,\n            mensagem: `❓ Tipo de registro desconhecido: '${tool}'`,\n            itemOriginal: item\n          }\n        });\n        break;\n    }\n  }\n}\n\nreturn saida;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1160,
+        -20
+      ],
+      "id": "840bf39e-3586-47ff-9a20-73732b5c1bba",
+      "name": "extrai_dados_ia"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "431049c3-2490-4d8e-8924-ad3de9033510",
+              "leftValue": "={{ $json.propriedade_nome }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1420,
+        -20
+      ],
+      "id": "e1a1c7fc-c940-475f-a51f-0114a2a69174",
+      "name": "se_tem_nome_propriedade"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT p.id\nFROM propriedade p\nJOIN usuario u ON p.user_id = u.id\nWHERE p.nome ILIKE '{{$('extrai_dados_ia').item.json.propriedade_nome }}'\n  AND u.user_id = '{{$('Webhook').first().json.body.user_id.toString() }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1560,
+        -220
+      ],
+      "id": "d1d80aba-8b90-481a-bf0f-92cb26591f3c",
+      "name": "busca_propriedade_relacionada",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "042aa922-ad8e-4666-b863-456c396688b1",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1820,
+        -260
+      ],
+      "id": "44df04b4-9a1b-45d3-a856-a548353069ca",
+      "name": "se_existir_propriedade_relacionada"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"erro\": true,\n  \"mensagem\": \"Não foi possível encontrar uma propriedade com esse nome.\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2100,
+        -160
+      ],
+      "id": "ce0d6a21-9841-4a03-b6b8-91f032314ac3",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"mensagem\": \"Dados de insumo registrados com sucesso.\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        3360,
+        300
+      ],
+      "id": "3c433513-4adb-48ad-958b-29aaa89ef9c1",
+      "name": "Respond to Webhook5"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "insumo",
+          "mode": "list",
+          "cachedResultName": "insumo"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('Webhook').first().json.body.user_id.toString() }}",
+            "tipo": "={{ $json.tipo }}",
+            "propriedade_id": "={{ $json.propriedade_id }}",
+            "preco_unitario": "={{ $json.preco_unitario }}",
+            "nome": "={{ $json.nome_insumo }}",
+            "quantidade": "={{ $json.quantidade }}",
+            "registrado_por": "={{ $json.registrado_por }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "nome",
+              "displayName": "nome",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "tipo",
+              "displayName": "tipo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "quantidade",
+              "displayName": "quantidade",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "preco_unitario",
+              "displayName": "preco_unitario",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "propriedade_id",
+              "displayName": "propriedade_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "registrado_por",
+              "displayName": "registrado_por",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3220,
+        300
+      ],
+      "id": "fe329551-0b8b-4d50-af6f-b4563539a022",
+      "name": "salva_dados_insumo",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"mensagem\": \"Dados de trabalho registrados com sucesso.\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        3000,
+        280
+      ],
+      "id": "4a93f800-8760-460f-83c2-50043e7e350f",
+      "name": "Respond to Webhook6"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "trabalho",
+          "mode": "list",
+          "cachedResultName": "trabalho"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('Webhook').first().json.body.user_id.toString() }}",
+            "propriedade_id": "={{ $json.propriedade_id }}",
+            "custo": "={{ $json.custo }}",
+            "descricao": "={{ $json.descricao }}",
+            "responsavel": "={{ $json.responsavel }}",
+            "registrado_por": "={{ $json.registrado_por }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "propriedade_id",
+              "displayName": "propriedade_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "descricao",
+              "displayName": "descricao",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "responsavel",
+              "displayName": "responsavel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "custo",
+              "displayName": "custo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "registrado_por",
+              "displayName": "registrado_por",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2860,
+        280
+      ],
+      "id": "5343477b-fcf4-41af-92be-aab6649b1cab",
+      "name": "salva_dados_trabalho",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const dados = [];\n\nconst iaItems = $('extrai_dados_ia').all();\n\nlet propriedadesEncontradas = [];\ntry {\n  propriedadesEncontradas = $('se_existir_propriedade_relacionada').all();\n} catch (e) {\n  propriedadesEncontradas = [];\n}\n\nlet propIndex = 0;\n\nfor (const item of iaItems) {\n  const original = item.json;\n\n  if (original.erro) {\n    dados.push(original);\n    continue;\n  }\n\n  let propriedade_id = null;\n\n  if (original.propriedade_nome && propriedadesEncontradas.length > 0) {\n    propriedade_id = propriedadesEncontradas[propIndex]?.json?.id ?? null;\n    propIndex++;\n  }\n\n  if ($('Webhook').first().json.body.registrado_por) {\n    dados.push({\n      ...original,\n      propriedade_id,\n      registrado_por: $('Webhook').first().json.body.registrado_por\n    });\n  } else {\n    dados.push({\n      ...original,\n      propriedade_id,\n      registrado_por: original.registrado_por ?? ''\n    });\n  }\n}\n\nreturn dados;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2360,
+        -20
+      ],
+      "id": "61fe1dd4-6c40-4bb5-b713-f5173e029267",
+      "name": "adiciona_propriedade_id"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        740,
+        220
+      ],
+      "id": "2de7a58b-d4ad-4c35-b3b5-17751bab2b53",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "sTS9JfuVz7vC4JXq",
+          "name": "ray"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $execution.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        860,
+        220
+      ],
+      "id": "9c40b988-c608-4884-bee3-589040fdbc10",
+      "name": "Redis Chat Memory",
+      "credentials": {
+        "redis": {
+          "id": "m7wYmICeKCBuPLw3",
+          "name": "Redis account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "api.teste.onlinecenter.com.br",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+            "content-length": "17335",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+            "content-type": "multipart/form-data; boundary=----WebKitFormBoundaryOtdx3yrObEFmmtJ8",
+            "origin": "https://62c65a0b-4671-4448-b347-53ef832d2cbf.lovableproject.com",
+            "priority": "u=1, i",
+            "referer": "https://62c65a0b-4671-4448-b347-53ef832d2cbf.lovableproject.com/",
+            "sec-ch-ua": "\"Google Chrome\";v=\"135\", \"Not-A.Brand\";v=\"8\", \"Chromium\";v=\"135\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Linux\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "x-forwarded-for": "45.70.145.249",
+            "x-forwarded-host": "api.teste.onlinecenter.com.br",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "fd2d6166e5b9",
+            "x-real-ip": "45.70.145.249"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "user_id": "1990031044"
+          },
+          "webhookUrl": "https://api.teste.onlinecenter.com.br/webhook/excel-upload",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "extrai_dados_excel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extrai_dados_excel": {
+      "main": [
+        [
+          {
+            "node": "retorna_dados_formatados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI_que_classifica_registros": {
+      "main": [
+        [
+          {
+            "node": "extrai_dados_ia",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "erro_interno",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "retorna_dados_formatados": {
+      "main": [
+        [
+          {
+            "node": "AI_que_classifica_registros",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "erro_formato_planilha",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "salva_dados_plantio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "salva_dados_colheita",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "salva_dados_venda",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "salva_dados_gasto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "salva_dados_insumo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "salva_dados_trabalho",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "salva_dados_plantio": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "salva_dados_colheita": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "salva_dados_venda": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "salva_dados_gasto": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extrai_dados_ia": {
+      "main": [
+        [
+          {
+            "node": "se_tem_nome_propriedade",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "se_tem_nome_propriedade": {
+      "main": [
+        [
+          {
+            "node": "busca_propriedade_relacionada",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "adiciona_propriedade_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "busca_propriedade_relacionada": {
+      "main": [
+        [
+          {
+            "node": "se_existir_propriedade_relacionada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "se_existir_propriedade_relacionada": {
+      "main": [
+        [
+          {
+            "node": "adiciona_propriedade_id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "salva_dados_insumo": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "salva_dados_trabalho": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "adiciona_propriedade_id": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI_que_classifica_registros",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI_que_classifica_registros",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "89dc5241-7220-4d30-9ea5-b59e4498fb92",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9aab45911b97299333480ee93b3a756a301732a8d3c5c2882e1becb4b9fe223a"
+  },
+  "id": "qqz1tgAd9JRYvqwQ",
+  "tags": []
+}

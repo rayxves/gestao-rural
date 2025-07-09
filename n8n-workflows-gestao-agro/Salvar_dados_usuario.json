@@ -1,0 +1,1014 @@
+{
+  "name": "Salvar_dados_usuario",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "salvar_dados",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b7576d98-b6e7-4f35-9680-599ff8c7cdba",
+      "name": "Webhook",
+      "webhookId": "d342a8a1-a000-4dee-b3cb-e23b062ecfdb"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "call this tool when you need to save planting data\n",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "plantio",
+          "mode": "list",
+          "cachedResultName": "plantio"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('user_id', ``, 'string') }}",
+            "cultura": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('cultura', ``, 'string') }}",
+            "data_plantio": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('data_plantio', ``, 'string') }}",
+            "area_plantada": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('area_plantada', ``, 'number') }}",
+            "propriedade_id": "={{ $json.body.dados.propriedade_id }}",
+            "registrado_por": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('registrado_por', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cultura",
+              "displayName": "cultura",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_plantio",
+              "displayName": "data_plantio",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "area_plantada",
+              "displayName": "area_plantada",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "propriedade_id",
+              "displayName": "propriedade_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "registrado_por",
+              "displayName": "registrado_por",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        320,
+        260
+      ],
+      "id": "7b9e82bb-7afe-49c8-b27f-b838852d331d",
+      "name": "inserir_dados_plantio",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "call this tool when you need to save harvest data\n",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "colheita",
+          "mode": "list",
+          "cachedResultName": "colheita"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "quantidade": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('quantidade', ``, 'number') }}",
+            "user_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('user_id', ``, 'string') }}",
+            "cultura": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('cultura', ``, 'string') }}",
+            "data_colheita": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('data_colheita', ``, 'string') }}",
+            "propriedade_id": "={{ $json.body.dados.propriedade_id }}",
+            "registrado_por": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('registrado_por', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cultura",
+              "displayName": "cultura",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_colheita",
+              "displayName": "data_colheita",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "quantidade",
+              "displayName": "quantidade",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "propriedade_id",
+              "displayName": "propriedade_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "registrado_por",
+              "displayName": "registrado_por",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        560,
+        300
+      ],
+      "id": "c301246c-da6e-4f13-a74d-d13e616948d0",
+      "name": "inserir_dados_colheita",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "call this tool when you need to save sales data\n",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "venda",
+          "mode": "list",
+          "cachedResultName": "venda"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "cultura": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('cultura', ``, 'string') }}",
+            "data_venda": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('data_venda', ``, 'string') }}",
+            "quantidade": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('quantidade', ``, 'number') }}",
+            "valor_total": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('valor_total', ``, 'number') }}",
+            "user_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('user_id', ``, 'string') }}",
+            "propriedade_id": "={{ $json.body.dados.propriedade_id }}",
+            "registrado_por": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('registrado_por', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cultura",
+              "displayName": "cultura",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_venda",
+              "displayName": "data_venda",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "quantidade",
+              "displayName": "quantidade",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "valor_total",
+              "displayName": "valor_total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "propriedade_id",
+              "displayName": "propriedade_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "registrado_por",
+              "displayName": "registrado_por",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        640,
+        320
+      ],
+      "id": "3e7129e9-3307-414e-9c6d-2ec8c83587b2",
+      "name": "inserir_dados_venda",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "call this tool when you need to save spending data\n",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "gasto",
+          "mode": "list",
+          "cachedResultName": "gasto"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tipo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('tipo', ``, 'string') }}",
+            "valor": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('valor', ``, 'number') }}",
+            "data_gasto": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('data_gasto', ``, 'string') }}",
+            "descricao": "={{ $json.body.dados.descricao }}",
+            "user_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('user_id', ``, 'string') }}",
+            "propriedade_id": "={{ $json.body.dados.propriedade_id }}",
+            "registrado_por": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('registrado_por', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tipo",
+              "displayName": "tipo",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "valor",
+              "displayName": "valor",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_gasto",
+              "displayName": "data_gasto",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "descricao",
+              "displayName": "descricao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "propriedade_id",
+              "displayName": "propriedade_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "registrado_por",
+              "displayName": "registrado_por",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        480,
+        340
+      ],
+      "id": "589a006a-4d91-42e5-92a2-c2a863935fd2",
+      "name": "inserir_dados_gasto",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body }}",
+        "options": {
+          "systemMessage": "Você é uma assistente agrícola inteligente. Sua única e principal função é **DECIDIR E GERAR A MENSAGEM CORRETA** em formato JSON, indicando sucesso no registro dos dados ou solicitando correção. Para isso, você DEVE primeiramente **identificar a ferramenta de salvamento apropriada** para os dados fornecidos e salvar os dados.\n\n---\n\n📥 Entrada recebida:\n\n- resposta_usuario: texto da resposta do usuário (ex: \"sim\", \"não\", \"está correto\", \"pode seguir\", etc).\n- dados: objeto JSON contendo as informações que foram extraídas na etapa anterior e que o usuário está confirmando ou corrigindo.\n\n---\n\n🎯 Regras de DECISÃO e FORMATO DE SAÍDA:\n\n1.  **SE a resposta do usuário for AFIRMATIVA** (indica concordância, como \"sim\", \"confirmado\", \"pode salvar\", \"está correto\", \"ok\", \"isso mesmo\", \"adiante\"):\n    * **PASSO INTERNO (VOCÊ DEVE FAZER ISSO PRIMEIRO):** IDENTIFIQUE A FERRAMENTA (`tool`) CORRETA para salvar os `dados`.\n        * **Critérios de Identificação da `tool` (verifique os campos no objeto `dados`):**\n            * **Plantio:** Se `dados` contiver `data_plantio`, a `tool` é `inserir_dados_plantio`.\n            * **Colheita:** Se `dados` contiver `data_colheita`, a `tool` é `inserir_dados_colheita`.\n            * **Venda:** Se `dados` contiver `data_venda`, a `tool` é `inserir_dados_venda`.\n            * **Gasto:** Se `dados` contiver `data_gasto`, a `tool` é `inserir_dados_gasto`.\n                * *Regra específica para Gasto*: Se `descricao` estiver ausente ou for \"sem descrição\", defina `\"descricao\": null` NO JSON DE `dados` ANTES de usar a ferramenta (mas não inclua isso na sua saída JSON).\n            * **Insumo:** Se `dados` contiver `preco_unitario` E `nome` (do insumo), a `tool` é `inserir_dados_insumo`.\n            * **Trabalho:** Se `dados` contiver `descricao` (da atividade) E `responsavel`, a `tool` é `inserir_dados_trabalho`.\n    * **SUA TAREFA OBRIGATÓRIA (SAÍDA JSON):** Com base na `tool` identificada, retorne o JSON EXATO com a mensagem de sucesso.\n    * **Formato de Saída OBRIGATÓRIO (APENAS ESTE JSON - Copie e Cole este formato!):**\n        ```json\n        {\n          \"output\": \"✅ Seus dados de <nome_da_tabela_identificada> foram registrados com sucesso!\"\n        }\n        ```\n    * **EXEMPLOS AFIRMATIVOS (Modelo DEVE seguir estritamente este formato para acionar a tool):**\n        * **Exemplo para Gasto (quando a tool interna for 'inserir_dados_gasto'):**\n            ```json\n            {\n              \"output\": \"✅ Seus dados de gasto foram registrados com sucesso!\"\n            }\n            ```\n        * **Exemplo para Plantio (quando a tool interna for 'inserir_dados_plantio'):**\n            ```json\n            {\n             \n              \"output\": \"✅ Seus dados de plantio foram registrados com sucesso!\"\n            }\n            ```\n\n2.  **SE a resposta do usuário for NEGATIVA** (indica correção ou rejeição, como \"não\", \"vou corrigir\", \"tem erro\", \"está errado\", \"corrige\", \"não está certo\"):\n    * **SUA TAREFA OBRIGATÓRIA (SAÍDA JSON):** Retornar o JSON para pedir novos dados.\n    * **Formato de Saída OBRIGATÓRIO (APENAS ESTE JSON):**\n        ```json\n        {\n          \"tool\": \"pedir_dados\",\n          \"output\": \"Tudo bem! Por favor, envie os dados novamente com as correções.\"\n        }\n        ```\n3- Se a resposta não for nem afirmativa nem negativa retorne:\n   ```json\n        {\n          \"tool\": \"validar_resposta\",\n          \"output\": \"Por favor, responda apenas com 'sim' ou 'não'.\"\n        }\n        ```\n\n---\n\n⚠️ ATENÇÃO FINAL:\n\n- Retorne apenas um JSON puro.\n- ❌ Nunca use blocos markdown com crase ou ```json\n- ❌ Nunca use caracteres invisíveis como <\\ctrl46>, \\u0000, etc.\n- ✅ Apenas retorne o JSON exatamente como pedido, como texto plano."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        300,
+        0
+      ],
+      "id": "b1312fdc-b584-40bc-ace6-7ce120cda43b",
+      "name": "AI_corrige_e_salva_dados",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "call this tool when you need to save input data\n",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "insumo",
+          "mode": "list",
+          "cachedResultName": "insumo"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "quantidade": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('quantidade', ``, 'number') }}",
+            "user_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('user_id', ``, 'string') }}",
+            "preco_unitario": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('preco_unitario', ``, 'number') }}",
+            "nome": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('nome', ``, 'string') }}",
+            "tipo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('tipo', ``, 'string') }}",
+            "propriedade_id": "={{ $json.body.dados.propriedade_id }}",
+            "registrado_por": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('registrado_por', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "nome",
+              "displayName": "nome",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "tipo",
+              "displayName": "tipo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "quantidade",
+              "displayName": "quantidade",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "preco_unitario",
+              "displayName": "preco_unitario",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "propriedade_id",
+              "displayName": "propriedade_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "registrado_por",
+              "displayName": "registrado_por",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        760,
+        360
+      ],
+      "id": "5322b5c9-c712-4ccc-aa2f-18eda8e4fba5",
+      "name": "inserir_dados_insumo",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "call this tool when you need to save work data\n",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "trabalho",
+          "mode": "list",
+          "cachedResultName": "trabalho"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('user_id', ``, 'string') }}",
+            "propriedade_id": "={{ $json.body.dados.propriedade_id }}",
+            "custo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('custo', ``, 'number') }}",
+            "descricao": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('descricao', ``, 'string') }}",
+            "responsavel": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('responsavel', ``, 'string') }}",
+            "registrado_por": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('registrado_por', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "propriedade_id",
+              "displayName": "propriedade_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "descricao",
+              "displayName": "descricao",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "responsavel",
+              "displayName": "responsavel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "custo",
+              "displayName": "custo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "registrado_por",
+              "displayName": "registrado_por",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        400,
+        320
+      ],
+      "id": "7a5ee689-23b8-4262-9fae-41b440462e69",
+      "name": "inserir_dados_trabalho",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        240,
+        180
+      ],
+      "id": "d154e16e-bedf-40f6-833c-7e5e55100e3f",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "sTS9JfuVz7vC4JXq",
+          "name": "ray"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let output = $input.first().json.output;\n\noutput = output.replace(/```json|```/g, '').trim();\n\nlet parsed;\ntry {\n  parsed = JSON.parse(output);\n} catch (e) {\n  return [{\n    json: {\n      error: \"A resposta da IA não está em JSON válido.\",\n      conteudo_original: output\n    }\n  }];\n}\n\nif (!parsed.tool || !parsed.output) {\n  return [{\n    json: {\n      error: \"Campos obrigatórios 'tool' ou 'mensagem' ausentes.\",\n      conteudo: parsed\n    }\n  }];\n}\n\n\nreturn [{\n  json: {\n    tool: parsed.tool,\n    mensagem: parsed.output\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        0
+      ],
+      "id": "a1f47681-3fb6-438f-870c-17b3357502d6",
+      "name": "extrair_dados"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        900,
+        0
+      ],
+      "id": "0d610948-a0d7-4823-8d6a-3fdbd0b35cea",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $execution.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        240,
+        340
+      ],
+      "id": "a8ed86c3-e814-4fcf-871d-84ec7f668b38",
+      "name": "Redis Chat Memory",
+      "credentials": {
+        "redis": {
+          "id": "m7wYmICeKCBuPLw3",
+          "name": "Redis account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "api.teste.onlinecenter.com.br",
+            "user-agent": "axios/1.8.3",
+            "content-length": "196",
+            "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+            "accept-encoding": "gzip, compress, deflate, br",
+            "content-type": "application/json",
+            "x-forwarded-for": "172.18.0.1",
+            "x-forwarded-host": "api.teste.onlinecenter.com.br",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "fd2d6166e5b9",
+            "x-real-ip": "172.18.0.1"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "dados": {
+              "cultura": "soja",
+              "data_venda": "2025-06-02",
+              "quantidade": 10,
+              "valor_total": 2000,
+              "propriedade_id": "4"
+            },
+            "resposta_usuario": {
+              "content": "sim"
+            },
+            "user_id": "1990031044",
+            "registrado_por": "Gilmar",
+            "additional_kwargs": {},
+            "response_metadata": {}
+          },
+          "webhookUrl": "https://api.teste.onlinecenter.com.br/webhook/salvar_dados",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "inserir_dados_plantio": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI_corrige_e_salva_dados",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "inserir_dados_colheita": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI_corrige_e_salva_dados",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "inserir_dados_venda": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI_corrige_e_salva_dados",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "inserir_dados_gasto": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI_corrige_e_salva_dados",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI_corrige_e_salva_dados": {
+      "main": [
+        [
+          {
+            "node": "extrair_dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "inserir_dados_insumo": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI_corrige_e_salva_dados",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "inserir_dados_trabalho": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI_corrige_e_salva_dados",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI_corrige_e_salva_dados",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI_corrige_e_salva_dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extrair_dados": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI_corrige_e_salva_dados",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a950bb8f-799f-465d-badb-2ff1a7a77112",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9aab45911b97299333480ee93b3a756a301732a8d3c5c2882e1becb4b9fe223a"
+  },
+  "id": "iK1yeJoPN7UylHsZ",
+  "tags": []
+}

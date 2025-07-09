@@ -1,0 +1,3489 @@
+{
+  "name": "GestaoAgro_refatorado",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "bot-telegram",
+        "options": {
+          "ignoreBots": true
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1480,
+        200
+      ],
+      "id": "09825dc8-5d26-4a22-a7e7-a69eeaf4e4d0",
+      "name": "Webhook",
+      "webhookId": "45b84840-ea76-4e44-a3f6-8b228f454577"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Webhook').item.json.body.message.chat.id }}",
+        "text": "👋 Olá, produtor! Sou seu assistente rural digital e estou aqui pra facilitar o seu dia a dia no campo. Vamos registrar suas atividades? 🚜",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        900,
+        60
+      ],
+      "id": "addea35a-57d4-4b7c-9b36-e09e93ae8f94",
+      "name": "enviar_cumprimento",
+      "webhookId": "50006f56-94e7-4a68-baa2-8cd74e298d60",
+      "credentials": {
+        "telegramApi": {
+          "id": "iuLO2FKzmR3ohEKO",
+          "name": "GestaoRuralBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Webhook').item.json.body.message.chat.id }}",
+        "text": "={{ 'O que você gostaria de registrar hoje?\\nDigite uma das opções abaixo:\\n\\n• <b>Plantio</b> 🌱\\n• <b>Colheita</b> 🧺\\n• <b>Venda</b> 🛒\\n• <b>Gasto</b> 💰\\n• <b>Insumo</b> 🧪\\n• <b>Trabalho</b> 👨‍🌾\\n\\n📊 Acesse seus dados:\\nPara consultar registros, análises, clima, importar planilhas e cadastrar propriedades.\\n• <b>Ver dados</b>\\n\\n📅 Para ver detalhes da sua produção durante a semana:\\n• <b>Ver resumo da semana</b>\\n\\n🤖 Quer tirar dúvidas ou pedir recomendações?:\\n• <b>Perguntar à IA</b>\\n\\nℹ️ Para conhecer todas as funcionalidades do sistema:\\n• <b>Ver detalhes</b>' }} \n",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1120,
+        60
+      ],
+      "id": "d1db0572-cb20-4aa1-a0cc-7afcbdc150a1",
+      "name": "enviar_opções",
+      "webhookId": "d118d4d9-3ef9-4280-b89b-a81d4163d1ea",
+      "credentials": {
+        "telegramApi": {
+          "id": "iuLO2FKzmR3ohEKO",
+          "name": "GestaoRuralBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4084ace0-4209-4392-b7d8-f8db8a758424",
+              "name": "chat_id",
+              "value": "={{ $('Webhook').first().json.body.message.chat.id.toString() }}",
+              "type": "string"
+            },
+            {
+              "id": "f40c8a73-614c-47d1-bf25-0edaf8490599",
+              "name": "text",
+              "value": "={{ $('Webhook').first().json.body.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        40,
+        240
+      ],
+      "id": "c7a1173a-43e8-4973-963d-721489e37aad",
+      "name": "edit_webhook_fields"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "historico_gestao_rural",
+          "mode": "list",
+          "cachedResultName": "historico_gestao_rural"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "chat_id",
+              "value": "={{ $json.chat_id.toString() }}"
+            }
+          ]
+        },
+        "sort": {
+          "values": [
+            {
+              "column": "id",
+              "direction": "DESC"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "*"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        900,
+        340
+      ],
+      "id": "f9b6e0f2-01a3-4105-8ef6-5dab57ef37f9",
+      "name": "pegar_estado_atual",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "operation": "get",
+        "tableId": "historico_gestao_rural",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "chat_id",
+              "keyValue": "={{ $json.chat_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        300,
+        240
+      ],
+      "id": "0b9a12cb-de76-4b98-bb90-38d31c44f1a0",
+      "name": "pega_historico_se_existir",
+      "retryOnFail": false,
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "4W0JcfRHoefZP6go",
+          "name": "gestao_rural_supabase"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "historico_gestao_rural",
+          "mode": "list",
+          "cachedResultName": "historico_gestao_rural"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $('Webhook').item.json.body.message.chat.id }}",
+            "resposta_usuario": "={{ $('edit_webhook_fields').item.json.text }}",
+            "estado": "={{ 'COLLECTING_DATA' }}",
+            "criado_em": "={{ new Date().toISOString().split('T')[0] }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resposta_usuario",
+              "displayName": "resposta_usuario",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dados",
+              "displayName": "dados",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "tipo",
+              "displayName": "tipo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "criado_em",
+              "displayName": "criado_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1340,
+        60
+      ],
+      "id": "3274b3a4-5226-496e-8c4a-aac12d7b2b66",
+      "name": "cria_novo_historico-usuario",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "historico_gestao_rural",
+          "mode": "list",
+          "cachedResultName": "historico_gestao_rural"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $json.chat_id }}",
+            "estado": "={{ $json.estado }}",
+            "resposta_usuario": "={{ $('edit_webhook_fields').item.json.text }}",
+            "criado_em": "={{ new Date().toISOString().split('T')[0] }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resposta_usuario",
+              "displayName": "resposta_usuario",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "dados",
+              "displayName": "dados",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "tipo",
+              "displayName": "tipo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "criado_em",
+              "displayName": "criado_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1220,
+        340
+      ],
+      "id": "ff17ddf6-64f4-4c3b-aca1-9620c67363a1",
+      "name": "cria_nova_resposta",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "93748bf8-abcf-4347-a52d-b93e1d4771cd",
+              "leftValue": "={{ $json }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        540,
+        220
+      ],
+      "id": "d9ce80da-d8bd-4523-9315-96121429807e",
+      "name": "se_historico_nao_existe"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.resposta_usuario }}",
+        "options": {
+          "systemMessage": "Você é um assistente inteligente que interpreta a mensagem do usuário e determina a ação que ele deseja realizar.\n\n---\n\n🎯 Sua tarefa:\nLer a mensagem do usuário e responder **exclusivamente com um JSON** contendo:\n\n- `\"tool\"` → A ferramenta que será acionada pelo sistema.\n- `\"mensagem\"` → Apenas se a `tool` for `\"enviar_mensagem\"` ou `\"outros\"`.\n\n---\n\n🧠 COMO CLASSIFICAR:\n\n### 1. Usuário quer iniciar um novo registro (mas **ainda não forneceu dados**):\n\n- Se o usuário digitar coisas como:\n  - \"plantio\"\n  - \"quero registrar colheita\"\n  - \"vou registrar um gasto\"\n  - \"nova venda\"\n  - \"insumo\"\n  - \"trabalho\"\n  \n→ Use `tool: \"enviar_mensagem\"` e forneça uma `mensagem` explicando os dados que ele deve enviar.\nExemplos:\n🌱 Plantio:\n\njson\nCopiar\nEditar\n{\n  \"tool\": \"enviar_mensagem\",\n  \"mensagem\": \"🌱 Para registrar um plantio, me informe:\\n• Cultura\\n• Data do plantio (DD/MM/AAAA)\\n• Área plantada (somente número)\\nTem alguma propriedade registrada e deseja vincular os dados? Informe o nome da propriedade.\\n\\nExemplo: Plantei milho em 21/06/2025 numa área de 10 hectares na propriedade Sítio Esperança.\"\n}\n🧺 Colheita:\n\njson\nCopiar\nEditar\n{\n  \"tool\": \"enviar_mensagem\",\n  \"mensagem\": \"🧺 Para registrar uma colheita, diga:\\n• Cultura\\n• Data da colheita (DD/MM/AAAA)\\n• Quantidade colhida\\nTem alguma propriedade registrada e deseja vincular os dados? Informe o nome da propriedade.\\n\\nExemplo: Colhi soja dia 01/07/2025, 200 sacas na propriedade Santa Luzia.\"\n}\n🛒 Venda:\n\njson\nCopiar\nEditar\n{\n  \"tool\": \"enviar_mensagem\",\n  \"mensagem\": \"🛒 Para registrar uma venda, informe:\\n• Cultura\\n• Data da venda (DD/MM/AAAA)\\n• Quantidade\\n• Valor total\\nTem alguma propriedade registrada e deseja vincular os dados? Informe o nome da propriedade.\\n\\nExemplo: Vendi milho dia 05/07/2025, 100 sacas por 5000 reais na propriedade Boa Vista.\"\n}\n💰 Gasto:\n\njson\nCopiar\nEditar\n{\n  \"tool\": \"enviar_mensagem\",\n  \"mensagem\": \"💰 Para registrar um gasto, diga:\\n• Tipo do gasto\\n• Data (DD/MM/AAAA)\\n• Valor\\n• Descrição (opcional)\\nTem alguma propriedade registrada e deseja vincular os dados? Informe o nome da propriedade.\\n\\nExemplo: Gastei 300 reais com sementes em 10/05/2025 na propriedade Recanto Verde.\"\n}\n🧪 Insumo:\n\njson\nCopiar\nEditar\n{\n  \"tool\": \"enviar_mensagem\",\n  \"mensagem\": \"🧪 Para registrar um insumo, diga:\\n• Nome do insumo\\n• Tipo\\n• Quantidade adquirida\\n• Preço unitário\\nTem alguma propriedade registrada e deseja vincular os dados? Informe o nome da propriedade.\\n\\nExemplo: Comprei 50 litros de fertilizante líquido tipo NPK a 15 reais o litro na propriedade Campo Alegre.\"\n}\n👨‍🌾 Trabalho:\n\njson\nCopiar\nEditar\n{\n  \"tool\": \"enviar_mensagem\",\n  \"mensagem\": \"👨‍🌾 Para registrar um trabalho, informe:\\n• Descrição da atividade\\n• Responsável\\n• Custo (opcional)\\nTem alguma propriedade registrada e deseja vincular os dados? Informe o nome da propriedade.\\n\\nExemplo: Contratei João para capina da lavoura por 300 reais na propriedade Estância Bela Vista.\"\n}\n\n📌 Sobre a propriedade:\n\n⚠️ Nunca peça \"ID da propriedade\" para o usuário.\n⚠️ O usuário não deve informar o propriedade_id diretamente.\n⚠️ O campo propriedade_id pode ser null.\n\nSe for necessário pedir dados da propriedade, peça apenas o nome da propriedade.\n\nO nome da propriedade deve ser idêntico ao nome salvo anteriormente.\n\nSe o nome for informado, o sistema tentará buscar automaticamente o ID correspondente no banco.\n❌ Nunca inclua \"ID da propriedade (opcional)\" nas mensagens geradas.\n✅ Sempre prefira: \"na propriedade chamada X\", ou simplesmente ignore a propriedade (pois ela é opcional).\n\n\n2. Usuário já está enviando dados para o registro (mesmo que incompletos):\nFrases como:\n\n\"Plantei milho dia 21/06/2025 numa área de 10 hectares\"\n\n\"Colhi soja dia 20/07/2025, 200 sacas\"\n\n\"Gastei 100 com sementes\"\n\n→ Use:\n\njson\nCopiar\nEditar\n{ \"tool\": \"proxima_etapa_registro\" }\n3. Usuário quer ver dados registrados:\nFrases como:\n\n\"ver dados\"\n\n\"mostrar meus registros\"\n\n\"quero ver meus dados\"\n\n→ Use:\n\njson\nCopiar\nEditar\n{ \"tool\": \"ver_dados\" }\n4. Usuário quer ver o resumo da semana:\nFrases como:\n\n\"resumo da semana\"\n\n\"ver meu resumo semanal\"\n\n\"mostrar resumo\"\n\n→ Use:\n\njson\nCopiar\nEditar\n{ \"tool\": \"resumo_semana\" }\n5. Usuário quer consultar a IA:\nFrases como:\n\n\"consultar a IA\"\n\n\"perguntar para a IA\"\n\n\"me ajuda com uma dúvida\"\n\n→ Use:\n\njson\nCopiar\nEditar\n{ \"tool\": \"consultar_ia\" }\n6. Mensagem não compreendida ou fora de contexto:\nFrases como:\n\n\"oi\"\n\n\"kkk\"\n\n\"hahaha\"\n\n\"bom dia\"\n\n→ Use:\n\njson\nCopiar\nEditar\n{\n  \"tool\": \"enviar_mensagem\",\n  \"mensagem\": \"Desculpe, não consegui entender o que você deseja. Por favor, digite uma das opções como 'plantio', 'ver dados', ou 'consultar a IA'.\"\n}\n\n7. Usuário quer ver informações do sistema:\nFrases como:\n\n\"ver funcionalidades\"\n\"ver detalhes\"\n\"ajuda\"\n\"como funciona\"\n\"o que posso fazer\"\n\n→ Use:\n\njson\nCopiar\nEditar\n{\n  \"tool\": \"enviar_detalhes\"\n}\n✅ Regras obrigatórias:\n\nSempre retorne apenas um JSON com tool, e se necessário, também mensagem.\n\nNunca envie explicações fora do JSON.\n\nNunca retorne intent, fala, output ou qualquer outro campo além de tool e mensagem.\n\nSe a tool for proxima_etapa_registro, ver_dados, resumo_semana ou consultar_ia, não inclua mensagem.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        1980,
+        420
+      ],
+      "id": "9fd71d04-7693-49d2-aba6-6c8917bede72",
+      "name": "AI_que_identifica_intencao_usuario",
+      "executeOnce": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "let output = $input.first().json.output;\n\n\nlet jsonMatch = output.match(/{[\\s\\S]*}/);\n\nif (!jsonMatch) {\n  return [{\n    json: {\n      erro: \"Não foi possível localizar um objeto JSON no output da IA.\",\n      conteudo_original: output\n    }\n  }];\n}\n\nlet cleanedJson = jsonMatch[0].trim();\n\nlet parsed;\ntry {\n  parsed = JSON.parse(cleanedJson);\n} catch (e) {\n  return [{\n    json: {\n      erro: \"A resposta da IA não está em JSON válido mesmo após extração.\",\n      conteudo_original: cleanedJson\n    }\n  }];\n}\n\nif (!parsed.tool) {\n  return [{\n    json: {\n      erro: \"Campo obrigatório 'tool' ausente.\",\n      conteudo: parsed\n    }\n  }];\n}\n\nconst result = {\n  tool: parsed.tool,\n  mensagem: parsed.mensagem ?? null\n};\n\nreturn [{ json: result }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2500,
+        400
+      ],
+      "id": "77a11469-1f3a-42f8-87c0-8a4ee34d1a1c",
+      "name": "extrair_tool_ai"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.tool }}",
+                    "rightValue": "={{ 'resumo_semana' }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "b5d9c83f-b179-41f1-bd9d-1822c761c147"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "resumo semana"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "dd6c956b-8f7c-4a96-84b6-22b0eb4cf43e",
+                    "leftValue": "={{ $json.tool }}",
+                    "rightValue": "={{ 'proxima_etapa_registro' }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "colher dados registro"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f93e1af3-2b43-4f2b-9af7-9e2aa9c9f0c2",
+                    "leftValue": "={{ $json.tool }}",
+                    "rightValue": "={{ 'ver_dados' }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ver dados"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5a036526-bcab-4571-b91b-a9eabbde82d4",
+                    "leftValue": "={{ $json.tool }}",
+                    "rightValue": "={{ 'consultar_ia' }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "consultar ia"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "95b96978-eabf-47ac-8c1c-a26bfde8f5e3",
+                    "leftValue": "={{ $json.tool }}",
+                    "rightValue": "={{ 'enviar_mensagem' }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "enviar mensagem registro"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5088cbd9-3873-495e-b6e2-1d510ed5fb6c",
+                    "leftValue": "={{ $json.tool }}",
+                    "rightValue": "={{ 'enviar_detalhes' }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "enviar detalhes"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        2820,
+        360
+      ],
+      "id": "a6f776fe-c168-4fb5-b1fc-d8d8872f9abf",
+      "name": "rotas_tool_retornada"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Webhook').first().json.body.message.chat.id }}",
+        "text": "={{`🌾 Bem-vindo à sua plataforma de gestão agrícola!\\n\\nAqui você pode ver seus dados registrados, acompanhar análises financeiras e climáticas, importar planilhas e muito mais.\\n\\nSe for seu primeiro acesso, será necessário criar uma conta. Caso já tenha uma, é só fazer login.\\n\\n👉 Clique <a href=\"https://gestao-rural.lovable.app/tabelas?user_id=${$('Webhook').first().json.body.message.chat.id}\">aqui</a> para ver seus dados.`}}\n",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3240,
+        340
+      ],
+      "id": "5adb715f-c20c-4635-9393-f3d0cc7ec40e",
+      "name": "mensagem_link_dados",
+      "webhookId": "caea5634-0320-44d0-a15c-19e0501e67de",
+      "credentials": {
+        "telegramApi": {
+          "id": "iuLO2FKzmR3ohEKO",
+          "name": "GestaoRuralBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "historico_gestao_rural",
+          "mode": "list",
+          "cachedResultName": "historico_gestao_rural"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $('edit_webhook_fields').first().json.chat_id }}",
+            "estado": "={{ 'ASKING_AI_AGENT' }}"
+          },
+          "matchingColumns": [
+            "chat_id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "resposta_usuario",
+              "displayName": "resposta_usuario",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "dados",
+              "displayName": "dados",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "tipo",
+              "displayName": "tipo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3440,
+        520
+      ],
+      "id": "fc443ea8-2469-4930-baa3-25dde7aefd68",
+      "name": "alterando_estado_pra_perguntar_ia",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('edit_webhook_fields').first().json.chat_id }}",
+        "text": "={{ 'Beleza! 😊 Pode mandar sua pergunta. \\n\\nAqui vão alguns exemplos de perguntas 🤔:\\n• Qual a melhor época para plantar soja?\\n• Quando colher o milho na minha região?\\n• Quais os cuidados com o solo antes do plantio?\\n\\nPode perguntar qualquer coisa, vou tentar te ajudar! ' }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3160,
+        480
+      ],
+      "id": "02ab91d6-2c40-4bfe-a932-ce9723147f58",
+      "name": "mensagem_consultar_ia",
+      "webhookId": "d6be9b75-3eaf-4c71-a0ff-236904de16ec",
+      "credentials": {
+        "telegramApi": {
+          "id": "iuLO2FKzmR3ohEKO",
+          "name": "GestaoRuralBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.estado }}",
+                    "rightValue": "={{ 'ASKING_AI_AGENT' }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "c8cb73ca-752b-4c51-bce6-3990788a4f06"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "consultar ia"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5e0461b1-a361-4211-b004-9aa5b79a77c7",
+                    "leftValue": "={{ $json.estado }}",
+                    "rightValue": "={{ 'COLLECTING_DATA' }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "coletando dados"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "230e7d61-ac9b-4368-8c31-d13a4b86fb05",
+                    "leftValue": "={{ $json.estado }}",
+                    "rightValue": "={{ 'CORRECTING_DATA' }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "corrigindo dados"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1580,
+        360
+      ],
+      "id": "9ff39761-9836-4c06-943f-cd6f2fe7b5b2",
+      "name": "rotas_estado"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('edit_webhook_fields').item.json.chat_id }}",
+        "text": "={{ $json.conteudo?.mensagem ? $json.conteudo.mensagem : $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        4080,
+        300
+      ],
+      "id": "3d11232b-4ee8-43a7-b528-a754153f8785",
+      "name": "retornar_confirmacao_usuario",
+      "webhookId": "027bde64-5625-450c-afe4-fcb6800eaa09",
+      "executeOnce": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "iuLO2FKzmR3ohEKO",
+          "name": "GestaoRuralBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "historico_gestao_rural",
+          "mode": "list",
+          "cachedResultName": "historico_gestao_rural"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $('edit_webhook_fields').first().json.chat_id }}",
+            "estado": "={{ 'CORRECTING_DATA' }}",
+            "dados": "={{ $('request_extrair_dados').first().json.dados }}"
+          },
+          "matchingColumns": [
+            "chat_id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "resposta_usuario",
+              "displayName": "resposta_usuario",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "dados",
+              "displayName": "dados",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tipo",
+              "displayName": "tipo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "criado_em",
+              "displayName": "criado_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4360,
+        300
+      ],
+      "id": "5e4eb96b-18ad-42b3-914f-899237fffd91",
+      "name": "atualiza_dados_e_estado",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "historico_gestao_rural",
+          "mode": "list",
+          "cachedResultName": "historico_gestao_rural"
+        },
+        "limit": 5,
+        "where": {
+          "values": [
+            {
+              "column": "chat_id",
+              "value": "={{ $('edit_webhook_fields').first().json.chat_id }}"
+            },
+            {
+              "column": "dados",
+              "condition": "IS NOT NULL"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "dados"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1640,
+        900
+      ],
+      "id": "7c7c4302-5c19-4cd2-b598-799bdc6ae81e",
+      "name": "pega_dados_salvos",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const dados = $(\"pega_dados_salvos\").first().json.dados;\n\ndelete dados.propriedade_nome;\nconst chaveData = Object.keys(dados).find(chave => chave.startsWith(\"data_\"));\n\nif (chaveData && dados[chaveData]) {\n  const [dia, mes, ano] = dados[chaveData].split('/');\n  dados[chaveData] = `${ano}-${mes}-${dia}`;\n}\n\n\nreturn {\n  json: {\n    dados,\n     resposta_usuario: {\n      content: $('Webhook').first().json.body.message.text\n    }\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        840
+      ],
+      "id": "2a0d7b57-c0db-43f8-941b-43651aacc2ae",
+      "name": "retorna_dados_e_reposta"
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "historico_gestao_rural",
+          "mode": "list",
+          "cachedResultName": "historico_gestao_rural"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "chat_id",
+              "value": "={{ $('edit_webhook_fields').first().json.chat_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3440,
+        360
+      ],
+      "id": "cd798942-40a5-4cd5-9913-4af92a6daca6",
+      "name": "deletar_historico_usuario1",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.resposta_usuario }}",
+        "options": {
+          "systemMessage": "Você é um assistente agrícola inteligente, que responde dúvidas de produtores rurais do Brasil.\n\nSeu papel é ajudar com informações úteis sobre clima, plantio, colheita, preços, previsões e boas práticas no campo. Use linguagem natural, clara e objetiva.\n\n---\n\n📌 Instruções de comportamento:\n\n1. Responda com base na realidade brasileira (safras, clima, regiões).\n2. Use bom senso para decidir se a resposta está completa ou se precisa de mais informações do usuário.\n3. Só pergunte “Posso te ajudar com mais alguma dúvida?” **quando sua resposta estiver clara, objetiva e não depender de mais dados**.\n4. Se ainda estiver faltando algo (ex: a região do usuário, tipo do produto, época do ano), **não pergunte se ele tem mais dúvidas**. Apenas explique que precisa de mais informações.\n5. Seja gentil e útil. Se não souber algo, diga com clareza e educação.\n\n---\n\n📦 FORMATO DE SAÍDA:\n\nRetorne apenas um JSON com os campos:\n\n{\n  \"mensagem\": \"<resposta final em linguagem natural>\",\n  \"estado_conversa\": \"continua\" ou \"finalizada\"\n}\n\n- Se a resposta estiver pendente de mais informações do usuário, use:\n  \"estado_conversa\": \"continua\"\n\n- Se o usuário encerrar a conversa com “não” ou algo semelhante, responda com uma despedida e:\n  \"estado_conversa\": \"finalizada\"\n\n❗ NÃO retorne tools, classificações ou explicações técnicas.\n\nSe a pergunta do usuário exigir dados em tempo real, como previsão do tempo ou preços atualizados, diga que você não tem acesso a dados atualizados e recomende consultar uma fonte confiável.\n\nNUNCA finja que está consultando uma previsão se não tiver os dados. NÃO use termos como “Temperatura máxima de X” ou “condição climática genérica”.\n\n\n---\n\n📌 EXEMPLO 1 (resposta clara e completa):\n{\n  \"mensagem\": \"O melhor período para plantar milho no Centro-Oeste é entre outubro e dezembro. Posso te ajudar com mais alguma dúvida?\",\n  \"estado_conversa\": \"continua\"\n}\n\n📌 EXEMPLO 2 (falta informação):\n{\n  \"mensagem\": \"Para responder com precisão, preciso saber sua região e qual tipo de arroz você deseja consultar.\",\n  \"estado_conversa\": \"continua\"\n}\n\n📌 EXEMPLO 3 (usuário encerrou):\n{\n  \"mensagem\": \"Combinado então! Qualquer coisa é só me chamar. 🌱\",\n  \"estado_conversa\": \"finalizada\"\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        1840,
+        80
+      ],
+      "id": "7d2e49a7-10f8-405e-9441-b70083fd24ee",
+      "name": "AI_responde_perguntas_usuario",
+      "executeOnce": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Webhook').item.json.body.message.chat.id }}",
+        "text": "={{ $json.mensagem }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2500,
+        40
+      ],
+      "id": "103de1a0-55e7-412f-83ab-d679ea94d663",
+      "name": "retorna_resposta_ia",
+      "webhookId": "4814f552-99b1-45e2-8560-2403baac593f",
+      "credentials": {
+        "telegramApi": {
+          "id": "iuLO2FKzmR3ohEKO",
+          "name": "GestaoRuralBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let msg = $input.first().json.output;\nmsg = msg.replace(/```json\\s*([\\s\\S]*?)```/, '$1').trim();\n\n try {\n  const resposta = JSON.parse(msg);\n  return {\n    mensagem: resposta.mensagem,\n    estado_conversa: resposta.estado_conversa\n  };\n} catch (e) {\n\n  return {\n    mensagem: msg,\n    estado_conversa: \"continua\"\n  };\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2280,
+        40
+      ],
+      "id": "4b790c92-5d5b-4be5-9c79-b90a219f4e14",
+      "name": "extrair_estado_e_mensagem"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').first().json.body.message.chat.id }}",
+        "tableName": "perguntas_chat_histories"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        1920,
+        260
+      ],
+      "id": "f66a82b2-7af0-4edf-8e8a-13977b2949a3",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1159eed3-91a2-46b3-ae64-534b4c57c38f",
+              "leftValue": "={{ $('extrair_estado_e_mensagem').item.json.estado_conversa }}",
+              "rightValue": "={{ 'continua' }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2680,
+        -100
+      ],
+      "id": "f0736198-538c-4086-93cf-df916f1990d4",
+      "name": "se_usuario_deseja_continuar"
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "historico_gestao_rural",
+          "mode": "list",
+          "cachedResultName": "historico_gestao_rural"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "chat_id",
+              "value": "={{ $('Webhook').first().json.body.message.chat.id.toString() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2940,
+        -100
+      ],
+      "id": "20e85d74-b064-46c4-a249-4b82c78d41cb",
+      "name": "deletar_historico_usuario4",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bea16fd3-d801-4a05-8a5a-36adfc84537f",
+              "leftValue": "={{ $json.dados.propriedade_nome }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3860,
+        120
+      ],
+      "id": "59054441-512a-41e9-9284-4170f07f9f07",
+      "name": "se_usuario_informou_propriedade"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT p.id\nFROM propriedade p\nJOIN usuario u ON p.user_id = u.id\nWHERE p.nome ILIKE '{{$('se_usuario_informou_propriedade').first().json.dados.propriedade_nome }}'\n  AND u.user_id = '{{$('edit_webhook_fields').first().json.chat_id }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4360,
+        80
+      ],
+      "id": "8c825606-6cb1-45a7-92a2-148a65a273e4",
+      "name": "busca_propriedade_relacionada",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "042aa922-ad8e-4666-b863-456c396688b1",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4680,
+        100
+      ],
+      "id": "18eda620-4544-4bcd-9a7d-75ac0bb6de47",
+      "name": "se_existir_propriedade_relacionada"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('edit_webhook_fields').first().json.chat_id }}",
+        "text": "={{ \"Desculpe, não encontramos uma propriedade registrada com esse nome. Tente enviar os dados novamente, o nome não pode ser abreviado e precisa ser o mesmo que foi cadastrado.\" }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        5120,
+        240
+      ],
+      "id": "a70a3cc9-d03b-42b7-86e6-7ab45c0cc60b",
+      "name": "pedir_dados_novamente",
+      "webhookId": "027bde64-5625-450c-afe4-fcb6800eaa09",
+      "executeOnce": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "iuLO2FKzmR3ohEKO",
+          "name": "GestaoRuralBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let dados = $(\"request_extrair_dados\").first().json.dados;\nconst propriedade_id = $('busca_propriedade_relacionada').first().json.id || null;\n\n\n\nconst dadosComPropriedade = {\n  ...dados,\n  propriedade_id: propriedade_id\n};\n\nreturn {\n  json: dadosComPropriedade\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4980,
+        80
+      ],
+      "id": "90bc848c-cd1d-4c7a-88f7-d3416e9c6b0c",
+      "name": "adicionar_propriedade"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "historico_gestao_rural",
+          "mode": "list",
+          "cachedResultName": "historico_gestao_rural"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $('edit_webhook_fields').first().json.chat_id }}",
+            "estado": "={{ 'CORRECTING_DATA' }}",
+            "dados": "={{ $('adicionar_propriedade').first().json }}"
+          },
+          "matchingColumns": [
+            "chat_id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "resposta_usuario",
+              "displayName": "resposta_usuario",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "dados",
+              "displayName": "dados",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tipo",
+              "displayName": "tipo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "criado_em",
+              "displayName": "criado_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        5180,
+        80
+      ],
+      "id": "16072a59-e07d-4756-a95c-46d3e3e1db96",
+      "name": "atualiza_dados_e_estado1",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1800,
+        280
+      ],
+      "id": "8202bb94-5b4b-4604-b95b-5f2a4215c762",
+      "name": "Google Gemini Chat Model3",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "sTS9JfuVz7vC4JXq",
+          "name": "ray"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "dados_extraidos_chat_histories",
+          "mode": "list",
+          "cachedResultName": "dados_extraidos_chat_histories"
+        },
+        "deleteCommand": "delete",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4620,
+        300
+      ],
+      "id": "e25480ac-9df4-4f66-a342-dd99f912533d",
+      "name": "deletar_historico_dados_extraidos",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "dados_extraidos_chat_histories",
+          "mode": "list",
+          "cachedResultName": "dados_extraidos_chat_histories"
+        },
+        "deleteCommand": "delete",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        5580,
+        240
+      ],
+      "id": "7ce3440b-d5f7-4140-9b55-5eed60826d69",
+      "name": "deletar_historico_dados_extraidos1",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('edit_webhook_fields').item.json.chat_id }}",
+        "text": "={{ $('request_extrair_dados').first().json.conteudo?.mensagem ? $('request_extrair_dados').first().json.conteudo?.mensagem : $('request_extrair_dados').first().json.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        5400,
+        80
+      ],
+      "id": "6b0790b1-f755-4865-b693-5377e657fc3c",
+      "name": "retornar_confirmacao_usuario1",
+      "webhookId": "027bde64-5625-450c-afe4-fcb6800eaa09",
+      "executeOnce": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "iuLO2FKzmR3ohEKO",
+          "name": "GestaoRuralBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Webhook').item.json.body.message.chat.id }}",
+        "text": "Desculpe, houve um problema. Você poderia enviar os dados novamente?",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1800,
+        1040
+      ],
+      "id": "1c65d75e-2e3a-43b4-83c3-a966efb17aa9",
+      "name": "retorna_erro",
+      "webhookId": "fad5b2b5-b4b1-41f9-bf1f-935937b89f74",
+      "credentials": {
+        "telegramApi": {
+          "id": "iuLO2FKzmR3ohEKO",
+          "name": "GestaoRuralBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "historico_gestao_rural",
+          "mode": "list",
+          "cachedResultName": "historico_gestao_rural"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $('edit_webhook_fields').first().json.chat_id }}",
+            "estado": "={{ 'COLLECTING_DATA' }}"
+          },
+          "matchingColumns": [
+            "chat_id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "resposta_usuario",
+              "displayName": "resposta_usuario",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "dados",
+              "displayName": "dados",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "criado_em",
+              "displayName": "criado_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2020,
+        1040
+      ],
+      "id": "e65343fa-9600-4547-b7b4-40ee058a5331",
+      "name": "atualiza_estado_coletar_dados_novamente1",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('edit_webhook_fields').item.json.chat_id }}",
+        "text": "🤖 Processando seus dados... só um instante!",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1940,
+        840
+      ],
+      "id": "5bb6b47e-6893-4f2a-8380-b1fc7fb6281b",
+      "name": "mensagem_de_espera",
+      "webhookId": "1acf0daa-c785-4733-ac4a-d5eacde610b0",
+      "executeOnce": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "iuLO2FKzmR3ohEKO",
+          "name": "GestaoRuralBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('edit_webhook_fields').first().json.chat_id }}",
+        "text": "🤖 Estamos buscando sua propriedade... só um instante!",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        4080,
+        80
+      ],
+      "id": "79801eef-b80d-42bb-abd4-2eb4ece61049",
+      "name": "retorna_mensagem_de_espera",
+      "webhookId": "377d295f-92b6-4ee8-9713-bf756b50060e",
+      "credentials": {
+        "telegramApi": {
+          "id": "iuLO2FKzmR3ohEKO",
+          "name": "GestaoRuralBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.teste.onlinecenter.com.br/webhook/extrair_dados",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "={{ $('Webhook').item.json.body.message.text }}"
+            },
+            {
+              "name": "chat_id",
+              "value": "={{ $('Webhook').item.json.body.message.chat.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3380,
+        200
+      ],
+      "id": "664647a5-4c39-4a31-bfc3-abc8d701b78a",
+      "name": "request_extrair_dados",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.teste.onlinecenter.com.br/webhook/salvar_dados",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "dados",
+              "value": "={{ $json.dados }}"
+            },
+            {
+              "name": "resposta_usuario",
+              "value": "={{ $json.resposta_usuario }}"
+            },
+            {
+              "name": "user_id",
+              "value": "={{ $('edit_webhook_fields').first().json.chat_id }}"
+            },
+            {
+              "name": "registrado_por",
+              "value": "={{ $('Webhook').first().json.body.message.from.first_name}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2460,
+        860
+      ],
+      "id": "be4de1b8-2e49-409e-a756-ce22f4f57ea6",
+      "name": "request_salvar_dados",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "04b2a8e9-d884-48cd-98b5-b148a79bfc32",
+              "leftValue": "={{ $json.body.message.chat.type }}",
+              "rightValue": "={{ 'private' }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1200,
+        200
+      ],
+      "id": "60bfda49-944e-4e31-b527-dc030ffa8a80",
+      "name": "se_for_mensagem_grupo"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.teste.onlinecenter.com.br/webhook/grupo",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "=json",
+              "value": "={{ $json.body }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1000,
+        60
+      ],
+      "id": "bae4141b-216c-4be6-bc53-00efd9a29f00",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Webhook').first().json.body.message.chat.id }}",
+        "text": "={{ \n  'ℹ️ <b>Detalhes e Funcionalidades</b>\\n\\nVocê está usando o sistema de gestão rural inteligente! 👨‍🌾🚜\\nAqui estão as funcionalidades disponíveis no bot e no site:\\n\\n📱 <b>Via Telegram:</b>\\n• Registrar atividades do campo: plantio, colheita, vendas, gastos, insumos e trabalhos realizados\\n• Ver um <b>resumo semanal da produção</b>: com totais de vendas, gastos e registros dos últimos dias\\n• Fazer perguntas à IA: como dúvidas sobre culturas, boas práticas agrícolas, entre outros temas\\n• Acessar o site com todos os seus dados, gráficos e análises — basta digitar: <b>Ver dados</b>\\n\\n💻 <b>Somente no site:</b>\\n• Importar planilhas Excel para salvar dados automaticamente\\n• Visualizar gráficos e análises de lucro, produtividade e custos\\n• Consultar o clima da sua região e possíveis impactos nas culturas\\n• Visualizar, editar e excluir registros\\n• Cadastrar propriedades e vincular registros a elas\\n\\n👥 <b>Adicionar colaboradores:</b>\\nVocê pode criar um grupo no Telegram com o bot e seus funcionários. O sistema reconhecerá automaticamente os participantes e permitirá que registrem dados em seu nome.'\n}} \n",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3140,
+        680
+      ],
+      "id": "1831d7f0-4d23-41dd-b2c5-d812ce4fee6f",
+      "name": "enviar_detalhes_sistema",
+      "webhookId": "b885aa82-41e3-4d95-b502-ad1430be7594",
+      "credentials": {
+        "telegramApi": {
+          "id": "iuLO2FKzmR3ohEKO",
+          "name": "GestaoRuralBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "historico_gestao_rural",
+          "mode": "list",
+          "cachedResultName": "historico_gestao_rural"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "chat_id",
+              "value": "={{ $('edit_webhook_fields').first().json.chat_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3440,
+        680
+      ],
+      "id": "47c5461e-0c91-4d71-bf30-abd04e3cce82",
+      "name": "deletar_historico_usuario5",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('edit_webhook_fields').first().json.chat_id }}",
+        "text": "={{ $('extrair_tool_ai').first().json.mensagem }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3280,
+        580
+      ],
+      "id": "5ae41002-dbb1-4821-b610-6b231242a217",
+      "name": "retornar_mensagem_ia",
+      "webhookId": "9aa960c5-0e8a-4be8-a5c0-165debb4d634",
+      "credentials": {
+        "telegramApi": {
+          "id": "iuLO2FKzmR3ohEKO",
+          "name": "GestaoRuralBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.teste.onlinecenter.com.br/webhook/erro",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "={{ $('Webhook').first().json.body.message.chat.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2680,
+        1060
+      ],
+      "id": "f18b81d9-4220-45e4-a268-63b791b2fb56",
+      "name": "request_erro"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.teste.onlinecenter.com.br/webhook/erro",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "={{ $('Webhook').first().json.body.message.chat.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3640,
+        280
+      ],
+      "id": "5e9a1224-ecae-4b00-a66b-060d2dcfc710",
+      "name": "request_erro2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.teste.onlinecenter.com.br/webhook/erro",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "={{ $('Webhook').first().json.body.message.chat.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2380,
+        520
+      ],
+      "id": "5ac09ad7-8ebd-47ce-b9eb-dacce0faf8c6",
+      "name": "request_erro3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.teste.onlinecenter.com.br/webhook/erro",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "={{ $('Webhook').first().json.body.message.chat.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2300,
+        200
+      ],
+      "id": "deb60fd2-4d88-427f-9d00-757cb1bbcf52",
+      "name": "request_erro4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "18764b3d-5321-471b-aee4-3b3cc353e5c4",
+              "leftValue": "={{ $json.conteudo.tool }}",
+              "rightValue": "\"\"",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "fad521a1-ca9e-45a2-bbee-d89b8c50c1d8",
+              "leftValue": "={{ $json.tool }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3640,
+        100
+      ],
+      "id": "edcdd6d0-1325-436b-98d2-c7fa5600fce9",
+      "name": "se_tool_esta_vazia"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('edit_webhook_fields').first().json.chat_id }}",
+        "text": "={{ $json.conteudo.text  }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3820,
+        -40
+      ],
+      "id": "63d38f4f-359d-4697-8a82-b2481f358058",
+      "name": "retorna_erro_formato",
+      "webhookId": "3b45eaf2-e48a-4b3f-b85b-9a47177febfb",
+      "credentials": {
+        "telegramApi": {
+          "id": "iuLO2FKzmR3ohEKO",
+          "name": "GestaoRuralBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1960,
+        600
+      ],
+      "id": "6434a849-6511-4850-b37b-bbc4a7816be9",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "sTS9JfuVz7vC4JXq",
+          "name": "ray"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('edit_webhook_fields').item.json.chat_id }}",
+        "text": "🤖 Estamos preparando o seu resumo...",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3000,
+        140
+      ],
+      "id": "ef72fa55-1d46-46f0-baec-0064b5795eb4",
+      "name": "mensagem_de_espera1",
+      "webhookId": "1acf0daa-c785-4733-ac4a-d5eacde610b0",
+      "executeOnce": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "iuLO2FKzmR3ohEKO",
+          "name": "GestaoRuralBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "colaborador",
+          "mode": "list",
+          "cachedResultName": "colaborador"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "user_id",
+              "value": "={{ $('Webhook').first().json.body.message.chat.id.toString() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -860,
+        220
+      ],
+      "id": "b761a2b4-0635-4094-a209-92a0143386ec",
+      "name": "get_colaborar_se_existir",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "dc44d17d-805f-4a73-899d-6395e3e9f566",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -580,
+        220
+      ],
+      "id": "f1a419f6-feca-4b17-a2e1-dd150d50a0f6",
+      "name": "se_for_colaborador"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "NqQuD8FVXeXozBfj",
+          "mode": "list",
+          "cachedResultName": "Fazer_resumo_semana"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        3260,
+        20
+      ],
+      "id": "1dd03bb5-7ec1-43b7-ac5d-dd3c2c7aeab6",
+      "name": "Execute Workflow"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $execution.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        2080,
+        640
+      ],
+      "id": "047e6b2c-6196-45a5-b76a-78ab601632be",
+      "name": "Redis Chat Memory",
+      "credentials": {
+        "redis": {
+          "id": "m7wYmICeKCBuPLw3",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Vp75agAJ4PgYPXl8",
+          "mode": "list",
+          "cachedResultName": "GestaoAgro_privado_colaboradores"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -160,
+        60
+      ],
+      "id": "ada9769f-37aa-46e5-863c-624ec2417ac2",
+      "name": "executar_conversa_privada_colaboradores"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9a556f1c-5369-4d86-9518-e67c36ba8101",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "411c7a91-3139-42b9-8c2a-2a420e3f3929",
+              "name": "message",
+              "value": "={{ $('Webhook').first().json.body.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "40a5653c-7a6e-410a-a7cd-754815956abe",
+              "name": "user_id",
+              "value": "={{ $json.user_id }}",
+              "type": "string"
+            },
+            {
+              "id": "7c89e3ed-15c0-4db9-8d85-614a5ab3fdbf",
+              "name": "produtor_id",
+              "value": "={{ $json.produtor_id }}",
+              "type": "string"
+            },
+            {
+              "id": "5fcfca65-105e-4cdb-bb8e-4ac7e362cc30",
+              "name": "username",
+              "value": "={{ $json.username }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -360,
+        120
+      ],
+      "id": "ed7fe3fc-9958-433f-8d92-33df5beee4a0",
+      "name": "editar_dados_colaboradores"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Webhook').first().json.body.message.chat.id }}",
+        "text": "={{ $json.mensagem ? $json.mensagem : $json.conteudo.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3040,
+        860
+      ],
+      "id": "3594699c-3505-4c27-94d9-6cec0700e746",
+      "name": "enviar_mensagem_pedindo_dados_novamente",
+      "webhookId": "37b49b68-67e9-44f2-acb0-b6580e5e771d",
+      "credentials": {
+        "telegramApi": {
+          "id": "iuLO2FKzmR3ohEKO",
+          "name": "GestaoRuralBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "historico_gestao_rural",
+          "mode": "list",
+          "cachedResultName": "historico_gestao_rural"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $('Webhook').first().json.body.message.chat.id.toString() }}",
+            "estado": "={{ 'COLLECTING_DATA' }}"
+          },
+          "matchingColumns": [
+            "chat_id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "resposta_usuario",
+              "displayName": "resposta_usuario",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "dados",
+              "displayName": "dados",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "criado_em",
+              "displayName": "criado_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3280,
+        880
+      ],
+      "id": "c8e6ee4d-30ed-4814-bf7e-52c7dbe97175",
+      "name": "atualiza_estado_coletar_dados_novamente",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Webhook').first().json.body.message.chat.id }}",
+        "text": "={{ $json.mensagem ? $json.mensagem : $json.conteudo.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3000,
+        1100
+      ],
+      "id": "9fd49bc2-4d38-479b-a2c1-314e8d632904",
+      "name": "enviar_mensagem_confirmando_dados",
+      "webhookId": "37b49b68-67e9-44f2-acb0-b6580e5e771d",
+      "credentials": {
+        "telegramApi": {
+          "id": "iuLO2FKzmR3ohEKO",
+          "name": "GestaoRuralBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "historico_gestao_rural",
+          "mode": "list",
+          "cachedResultName": "historico_gestao_rural"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "chat_id",
+              "value": "={{ $('Webhook').first().json.body.message.chat.id.toString() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3240,
+        1120
+      ],
+      "id": "935a4ab2-2c82-42d9-b9f7-98938d97a2a5",
+      "name": "deletar_historico_atual1",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.tool }}",
+                    "rightValue": "={{ 'pedir_dados' }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "15dafca7-cab8-4595-b797-f8a5ad9a8077"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "pedir dados"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "fa06a9ca-2ea1-474c-960a-4592d3be1bb6",
+                    "leftValue": "={{ $json.tool }}",
+                    "rightValue": "={{ 'validar_resposta' }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "validar resposta"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "3280550a-bcd7-459d-a2c3-b4dc4eaaf7be",
+                    "leftValue": "={{ $json.tool }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notExists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "dados salvos"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        2740,
+        900
+      ],
+      "id": "a0a61dec-2991-4754-8ca7-cdabb05dd442",
+      "name": "rotas_tool"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Webhook').first().json.body.message.chat.id }}",
+        "text": "={{ $json.mensagem ? $json.mensagem : $json.conteudo.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3100,
+        1000
+      ],
+      "id": "a0787f60-b013-4d7b-858a-8037860918fe",
+      "name": "enviar_mensagem_pedindo_confirmacao_novamente",
+      "webhookId": "37b49b68-67e9-44f2-acb0-b6580e5e771d",
+      "credentials": {
+        "telegramApi": {
+          "id": "iuLO2FKzmR3ohEKO",
+          "name": "GestaoRuralBot"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "deletar_historico_atual1": [
+      {
+        "json": {
+          "success": true
+        }
+      }
+    ],
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "api.teste.onlinecenter.com.br",
+            "content-length": "228",
+            "accept-encoding": "gzip, deflate",
+            "content-type": "application/json",
+            "x-forwarded-for": "91.108.5.87",
+            "x-forwarded-host": "api.teste.onlinecenter.com.br",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "fd2d6166e5b9",
+            "x-real-ip": "91.108.5.87"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "update_id": 98725376,
+            "message": {
+              "message_id": 3513,
+              "from": {
+                "id": 1990031044,
+                "is_bot": false,
+                "first_name": "ray",
+                "language_code": "pt-br"
+              },
+              "chat": {
+                "id": 1990031044,
+                "first_name": "ray",
+                "type": "private"
+              },
+              "date": 1751918389,
+              "text": "ioi"
+            }
+          },
+          "webhookUrl": "https://api.teste.onlinecenter.com.br/webhook/bot-telegram",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "se_for_mensagem_grupo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "enviar_cumprimento": {
+      "main": [
+        [
+          {
+            "node": "enviar_opções",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "enviar_opções": {
+      "main": [
+        [
+          {
+            "node": "cria_novo_historico-usuario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "edit_webhook_fields": {
+      "main": [
+        [
+          {
+            "node": "pega_historico_se_existir",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "pegar_estado_atual": {
+      "main": [
+        [
+          {
+            "node": "cria_nova_resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "pega_historico_se_existir": {
+      "main": [
+        [
+          {
+            "node": "se_historico_nao_existe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cria_nova_resposta": {
+      "main": [
+        [
+          {
+            "node": "rotas_estado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "se_historico_nao_existe": {
+      "main": [
+        [
+          {
+            "node": "enviar_cumprimento",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "pegar_estado_atual",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI_que_identifica_intencao_usuario": {
+      "main": [
+        [
+          {
+            "node": "extrair_tool_ai",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "request_erro3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extrair_tool_ai": {
+      "main": [
+        [
+          {
+            "node": "rotas_tool_retornada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "rotas_tool_retornada": {
+      "main": [
+        [
+          {
+            "node": "mensagem_de_espera1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "request_extrair_dados",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "mensagem_link_dados",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "mensagem_consultar_ia",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "retornar_mensagem_ia",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "enviar_detalhes_sistema",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mensagem_link_dados": {
+      "main": [
+        [
+          {
+            "node": "deletar_historico_usuario1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mensagem_consultar_ia": {
+      "main": [
+        [
+          {
+            "node": "alterando_estado_pra_perguntar_ia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "rotas_estado": {
+      "main": [
+        [
+          {
+            "node": "AI_responde_perguntas_usuario",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI_que_identifica_intencao_usuario",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "pega_dados_salvos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "retornar_confirmacao_usuario": {
+      "main": [
+        [
+          {
+            "node": "atualiza_dados_e_estado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "pega_dados_salvos": {
+      "main": [
+        [
+          {
+            "node": "mensagem_de_espera",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "retorna_erro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "retorna_dados_e_reposta": {
+      "main": [
+        [
+          {
+            "node": "request_salvar_dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI_responde_perguntas_usuario": {
+      "main": [
+        [
+          {
+            "node": "extrair_estado_e_mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "request_erro4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extrair_estado_e_mensagem": {
+      "main": [
+        [
+          {
+            "node": "retorna_resposta_ia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI_responde_perguntas_usuario",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "se_usuario_deseja_continuar": {
+      "main": [
+        [],
+        [
+          {
+            "node": "deletar_historico_usuario4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "retorna_resposta_ia": {
+      "main": [
+        [
+          {
+            "node": "se_usuario_deseja_continuar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "se_usuario_informou_propriedade": {
+      "main": [
+        [
+          {
+            "node": "retorna_mensagem_de_espera",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "retornar_confirmacao_usuario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "busca_propriedade_relacionada": {
+      "main": [
+        [
+          {
+            "node": "se_existir_propriedade_relacionada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "se_existir_propriedade_relacionada": {
+      "main": [
+        [
+          {
+            "node": "adicionar_propriedade",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "pedir_dados_novamente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "adicionar_propriedade": {
+      "main": [
+        [
+          {
+            "node": "atualiza_dados_e_estado1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI_responde_perguntas_usuario",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "atualiza_dados_e_estado": {
+      "main": [
+        [
+          {
+            "node": "deletar_historico_dados_extraidos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "pedir_dados_novamente": {
+      "main": [
+        [
+          {
+            "node": "deletar_historico_dados_extraidos1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "atualiza_dados_e_estado1": {
+      "main": [
+        [
+          {
+            "node": "retornar_confirmacao_usuario1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "retornar_confirmacao_usuario1": {
+      "main": [
+        [
+          {
+            "node": "deletar_historico_dados_extraidos1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "retorna_erro": {
+      "main": [
+        [
+          {
+            "node": "atualiza_estado_coletar_dados_novamente1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mensagem_de_espera": {
+      "main": [
+        [
+          {
+            "node": "retorna_dados_e_reposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "retorna_mensagem_de_espera": {
+      "main": [
+        [
+          {
+            "node": "busca_propriedade_relacionada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "request_extrair_dados": {
+      "main": [
+        [
+          {
+            "node": "se_tool_esta_vazia",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "request_erro2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "request_salvar_dados": {
+      "main": [
+        [
+          {
+            "node": "rotas_tool",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "request_erro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "se_for_mensagem_grupo": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "get_colaborar_se_existir",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "enviar_detalhes_sistema": {
+      "main": [
+        [
+          {
+            "node": "deletar_historico_usuario5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "deletar_historico_usuario5": {
+      "main": [
+        []
+      ]
+    },
+    "deletar_historico_usuario1": {
+      "main": [
+        []
+      ]
+    },
+    "retornar_mensagem_ia": {
+      "main": [
+        []
+      ]
+    },
+    "se_tool_esta_vazia": {
+      "main": [
+        [
+          {
+            "node": "retorna_erro_formato",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "se_usuario_informou_propriedade",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI_que_identifica_intencao_usuario",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mensagem_de_espera1": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_colaborar_se_existir": {
+      "main": [
+        [
+          {
+            "node": "se_for_colaborador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "se_for_colaborador": {
+      "main": [
+        [
+          {
+            "node": "editar_dados_colaboradores",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "edit_webhook_fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow": {
+      "main": [
+        []
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI_que_identifica_intencao_usuario",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "editar_dados_colaboradores": {
+      "main": [
+        [
+          {
+            "node": "executar_conversa_privada_colaboradores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "enviar_mensagem_pedindo_dados_novamente": {
+      "main": [
+        [
+          {
+            "node": "atualiza_estado_coletar_dados_novamente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "enviar_mensagem_confirmando_dados": {
+      "main": [
+        [
+          {
+            "node": "deletar_historico_atual1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "rotas_tool": {
+      "main": [
+        [
+          {
+            "node": "enviar_mensagem_pedindo_dados_novamente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "enviar_mensagem_pedindo_confirmacao_novamente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "enviar_mensagem_confirmando_dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a822ddde-e3d2-4e4a-81e1-22ecc78feb95",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9aab45911b97299333480ee93b3a756a301732a8d3c5c2882e1becb4b9fe223a"
+  },
+  "id": "L7IT62PSlbqg5PAK",
+  "tags": []
+}

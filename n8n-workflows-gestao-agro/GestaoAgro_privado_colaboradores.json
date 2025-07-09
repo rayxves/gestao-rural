@@ -1,0 +1,156 @@
+{
+  "name": "GestaoAgro_privado_colaboradores",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3af34044-0138-4c54-b2f7-41d182894653",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.user_id }}",
+        "text": "={{ '👋 Olá!\\n📌 <b>Colaboradores devem fazer os registros diretamente no grupo oficial</b>, onde suas mensagens são organizadas automaticamente!\\n\\n📊 <b>Quer ver os registros que você fez?</b> \\nBasta digitar <b>ver dados</b> aqui no privado e você terá acesso às informações que registrou.\\n\\n✅ Envie suas atividades normalmente no grupo.\\n\\nSe tiver dúvidas, pode procurar a equipe responsável.\\nObrigado pela colaboração! 🙌' }}\n",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        600,
+        80
+      ],
+      "id": "e1838858-023a-4628-9ae1-2bdd7fa06a64",
+      "name": "retorna_mensagem_colaborador",
+      "webhookId": "cf5f2ab2-cb88-4f4b-a1b1-dbd8e03887f4",
+      "credentials": {
+        "telegramApi": {
+          "id": "iuLO2FKzmR3ohEKO",
+          "name": "GestaoRuralBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e6ecc51f-ff1f-45e4-bbff-4d3ee790b661",
+              "leftValue": "={{ $json.message.toLowerCase() }}",
+              "rightValue": "={{ 'ver dados' }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        340,
+        0
+      ],
+      "id": "1ba04a7e-2c43-49df-bb4a-47740c343693",
+      "name": "se_usuario_quer_acessar_seus_dados"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.user_id }}",
+        "text": "={{`🌾 Bem-vindo à sua plataforma de gestão agrícola!\\n\\n👉 Clique <a href=\"https://gestao-rural.lovable.app/tabelas?user_id=${ $json.user_id }&produtor_id=${ $json.produtor_id }\">aqui</a> para ver seus dados.`}}\n",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        600,
+        -80
+      ],
+      "id": "db1e206c-634e-4ac3-a308-5964938fd873",
+      "name": "mensagem_link_dados",
+      "webhookId": "caea5634-0320-44d0-a15c-19e0501e67de",
+      "credentials": {
+        "telegramApi": {
+          "id": "iuLO2FKzmR3ohEKO",
+          "name": "GestaoRuralBot"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "id": "5",
+          "message": "Ver dados",
+          "user_id": "6517023574",
+          "produtor_id": "2",
+          "username": "Gilmar"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "se_usuario_quer_acessar_seus_dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "se_usuario_quer_acessar_seus_dados": {
+      "main": [
+        [
+          {
+            "node": "mensagem_link_dados",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "retorna_mensagem_colaborador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "289de6fa-ae0c-4688-a078-0e6911e43411",
+  "meta": {
+    "instanceId": "9aab45911b97299333480ee93b3a756a301732a8d3c5c2882e1becb4b9fe223a"
+  },
+  "id": "Vp75agAJ4PgYPXl8",
+  "tags": []
+}

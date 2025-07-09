@@ -1,0 +1,470 @@
+{
+  "name": "Integracao_open-meteo_API",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dados-climaticos",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2d75e888-f60e-4f2e-a9c7-229bfa76106b",
+      "name": "Webhook",
+      "webhookId": "623537fd-f3ac-42a6-b0fe-8c5e52af9b34"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.parts }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        0
+      ],
+      "id": "f12429f0-e4cd-4bdf-ad86-bf1e7ff52df8",
+      "name": "AI Agent",
+      "executeOnce": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT DISTINCT cultura\nFROM plantio\nWHERE user_id = {{$('Webhook').first().json.body.user_id}}::text\n  AND data_plantio >= CURRENT_DATE - INTERVAL '30 days'\n  AND data_plantio <= CURRENT_DATE;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        560,
+        0
+      ],
+      "id": "c5d5a46f-2fc9-42c7-bbee-3dafd1658fbb",
+      "name": "pegar_culturas_ultimo_mes",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.open-meteo.com/v1/forecast?latitude={{ $json.body.lat }}&longitude={{ $json.body.lon }}&current_weather=true&daily=temperature_2m_max,precipitation_sum&timezone=America/Sao_Paulo",
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        0
+      ],
+      "id": "3d616e52-b51e-42f4-8902-d6961e83bda4",
+      "name": "request_dados_climaticos"
+    },
+    {
+      "parameters": {
+        "jsCode": "const culturas = $input.all().filter(item => Object.keys(item.json || {}).length > 0);\nconst climaArray = $('request_dados_climaticos').all();\nconst clima = climaArray[0].json;\n\nif (culturas.length === 0) {\n  const promptSemCulturas = `\nVocê é um assistente agrícola especialista em clima.\n\nNenhuma cultura registrada foi encontrada.\n\nRetorne exatamente este JSON:\n\n[\n  {\n    \"mensagem\": \"Nenhuma cultura registrada foi encontrada para análise climática. Cadastre uma cultura antes de solicitar a análise.\"\n  }\n]\n`.trim();\n\n  return [{\n    json: {\n      role: \"user\",\n      parts: [{ text: promptSemCulturas }]\n    }\n  }];\n}\n\nfunction combinarCulturasComClima(culturas, clima) {\n  return culturas.map(item => ({\n    cultura: item.json?.cultura || 'desconhecida',\n    localizacao: {\n      latitude: clima.latitude,\n      longitude: clima.longitude\n    },\n    clima_atual: {\n      temperatura: clima.current_weather.temperature,\n      vento_kmh: clima.current_weather.windspeed,\n      direcao_vento_graus: clima.current_weather.winddirection,\n      codigo_clima: clima.current_weather.weathercode\n    },\n    previsao_semana: clima.daily.time.map((data, idx) => ({\n      data,\n      temperatura_maxima: clima.daily.temperature_2m_max[idx],\n      precipitacao_mm: clima.daily.precipitation_sum[idx]\n    }))\n  }));\n}\n\nconst analise = combinarCulturasComClima(culturas, clima);\n\nconst culturasTexto = analise.map(item => `\n🌾 *Cultura:* ${item.cultura}\n📍 *Localização:* ${item.localizacao.latitude}, ${item.localizacao.longitude}\n🌡️ *Temperatura atual:* ${item.clima_atual.temperatura}°C\n💨 *Vento:* ${item.clima_atual.vento_kmh} km/h (direção ${item.clima_atual.direcao_vento_graus}°)\n🌦️ *Código do clima:* ${item.clima_atual.codigo_clima}\n\n📅 *Previsão da semana:*\n${item.previsao_semana.map(p => `- ${p.data}: ${p.temperatura_maxima}°C, ${p.precipitacao_mm} mm`).join('\\n')}\n`).join('\\n\\n');\n\nconst prompt = `\nVocê é um assistente agrícola especialista em clima e impacto sobre culturas plantadas, nunca invente dados, sempre responda com uma base sólida.\n\nOBRIGATORIO: Analise os dados a seguir e diga:\n\n1. Quais culturas estão em risco nos próximos dias e por quê.\n2. Que riscos climáticos estão envolvidos (temperatura, seca, ventos).\n3. O que o agricultor pode fazer para reduzir o risco.\n\n### Dados:\n${culturasTexto}\n\nRetorne um array de objetos JSON, onde cada objeto representa uma cultura plantada e seu respectivo impacto, se houver. Se não houver impacto significativo (neutro ou positivo), NÃO é necessário incluir a cultura na saída, APENAS adicione culturas de impacto negativo.\n\nJSON\n\n[\n  {\n    \"cultura\": \"Nome da Cultura 1\",\n    \"impacto\": \"negativo\",\n    \"mensagem\": \"Explicação detalhada sobre o porquê do impacto (ex: 'A alta temperatura pode acelerar a maturação, mas a falta de chuva pode causar estresse hídrico.').\"\n  }\n]\n\nIMPORTANTE: Retorne **somente** um array JSON com objetos, SEM texto extra. \n\n`.trim();\n\nreturn [{\n  json: {\n    role: \"user\",\n    parts: [\n      { text: prompt },\n    ]\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        0
+      ],
+      "id": "bbe6c61f-d3e9-40da-bb45-717154ac041e",
+      "name": "extrair_cultura_e_dados_clima"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f0c79c5f-a4bd-42dd-8e15-976ece6da01b",
+              "name": "temperaturaAtual",
+              "value": "={{ $('request_dados_climaticos').first().json.current_weather.temperature }}",
+              "type": "string"
+            },
+            {
+              "id": "38fb4fbd-0e27-4f56-a7c6-73bbd4d31873",
+              "name": "vento",
+              "value": "={{ $('request_dados_climaticos').first().json.current_weather.windspeed }}",
+              "type": "string"
+            },
+            {
+              "id": "d7d0ba45-60e1-4dfa-bb9a-896caa58462d",
+              "name": "maximosProximosDias",
+              "value": "={{ $('request_dados_climaticos').first().json.daily.temperature_2m_max }}",
+              "type": "string"
+            },
+            {
+              "id": "cc6e78a1-945a-4900-9b14-be057307ed90",
+              "name": "chuvaProximosDias",
+              "value": "={{ $('request_dados_climaticos').first().json.daily.precipitation_sum }}",
+              "type": "string"
+            },
+            {
+              "id": "4c25debc-c14b-4863-a70a-1f4b99246875",
+              "name": "ia",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1780,
+        -100
+      ],
+      "id": "00adc5a0-0183-4944-94fc-326393444257",
+      "name": "editar_dados"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"erro\": \"{{ $json.error }}\"\n}",
+        "options": {
+          "responseCode": 500
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1700,
+        120
+      ],
+      "id": "8e991ff6-023b-455f-a174-3cf5b8e28f67",
+      "name": "retornar_erro_frontend"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2220,
+        -100
+      ],
+      "id": "030d8fa9-7467-4ae5-876b-99df0db654c5",
+      "name": "retornar_dados_frontend"
+    },
+    {
+      "parameters": {
+        "jsCode": "const dados = {\n  temperaturaAtual: $input.first().json.temperaturaAtual.toString(),\n  vento: $input.first().json.vento.toString(),\n  maximosProximosDias: JSON.stringify($input.first().json.maximosProximosDias),\n  chuvaProximosDias: JSON.stringify($input.first().json.chuvaProximosDias),\n  ia: $input.first().json.ia\n};\n\nreturn [\n  {\n    json: dados\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        -100
+      ],
+      "id": "65b886e4-5dc6-4e13-9228-a4593b109a69",
+      "name": "estruturar_resposta_json"
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "clima_chat_histories",
+          "mode": "list",
+          "cachedResultName": "clima_chat_histories"
+        },
+        "deleteCommand": "delete",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2440,
+        -100
+      ],
+      "id": "130d5271-f315-42f3-ac67-ed750f52342b",
+      "name": "deletar_historico_clima",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "clima_chat_histories",
+          "mode": "list",
+          "cachedResultName": "clima_chat_histories"
+        },
+        "deleteCommand": "delete",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1920,
+        120
+      ],
+      "id": "c06e4a59-8227-42da-8d5a-37cbc1446ae4",
+      "name": "deletar_historico_clima1",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        160
+      ],
+      "id": "2abe7325-f317-4a45-8e31-9a2b2ccd8e4b",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "sTS9JfuVz7vC4JXq",
+          "name": "ray"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $execution.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        1300,
+        220
+      ],
+      "id": "55366b4f-3b9e-4a0e-858f-04a320cf138a",
+      "name": "Redis Chat Memory",
+      "credentials": {
+        "redis": {
+          "id": "m7wYmICeKCBuPLw3",
+          "name": "Redis account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "api.teste.onlinecenter.com.br",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+            "content-length": "54",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+            "content-type": "application/json",
+            "origin": "https://1e375ae5-d90c-4020-a005-b281fb7da7fd.lovableproject.com",
+            "priority": "u=1, i",
+            "referer": "https://1e375ae5-d90c-4020-a005-b281fb7da7fd.lovableproject.com/",
+            "sec-ch-ua": "\"Google Chrome\";v=\"135\", \"Not-A.Brand\";v=\"8\", \"Chromium\";v=\"135\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Linux\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "x-forwarded-for": "45.70.145.134",
+            "x-forwarded-host": "api.teste.onlinecenter.com.br",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "fd2d6166e5b9",
+            "x-real-ip": "45.70.145.134"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "user_id": "1990031044",
+            "lat": -15.7942,
+            "lon": -47.8822
+          },
+          "webhookUrl": "https://api.teste.onlinecenter.com.br/webhook/dados-climaticos",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "request_dados_climaticos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "pegar_culturas_ultimo_mes": {
+      "main": [
+        [
+          {
+            "node": "extrair_cultura_e_dados_clima",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "request_dados_climaticos": {
+      "main": [
+        [
+          {
+            "node": "pegar_culturas_ultimo_mes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extrair_cultura_e_dados_clima": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "editar_dados",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "retornar_erro_frontend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "editar_dados": {
+      "main": [
+        [
+          {
+            "node": "estruturar_resposta_json",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "estruturar_resposta_json": {
+      "main": [
+        [
+          {
+            "node": "retornar_dados_frontend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "retornar_dados_frontend": {
+      "main": [
+        [
+          {
+            "node": "deletar_historico_clima",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "retornar_erro_frontend": {
+      "main": [
+        [
+          {
+            "node": "deletar_historico_clima1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a69a9625-5396-4360-83ef-81b2d33caeae",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9aab45911b97299333480ee93b3a756a301732a8d3c5c2882e1becb4b9fe223a"
+  },
+  "id": "uDPCBD6nFiVrIMIU",
+  "tags": []
+}

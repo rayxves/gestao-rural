@@ -1,0 +1,70 @@
+{
+  "name": "Limpar_estados_antigos",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 2
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "5913b173-8ae2-4dfd-a0be-621f707d26f1",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM perguntas_chat_histories nch\nUSING historico_gestao_rural hgr\nWHERE REPLACE(REPLACE(TRIM(nch.session_id), CHR(10), ''), CHR(13), '') = TRIM(hgr.chat_id)\n  AND hgr.criado_em < CURRENT_DATE - INTERVAL '1 days';\n\nDELETE FROM intencao_chat_histories nch\nUSING historico_gestao_rural hgr\nWHERE REPLACE(REPLACE(TRIM(nch.session_id), CHR(10), ''), CHR(13), '') = TRIM(hgr.chat_id)\n  AND hgr.criado_em < CURRENT_DATE - INTERVAL '1 days';\n\nDELETE FROM dados_extraidos_chat_histories nch\nUSING historico_gestao_rural hgr\nWHERE REPLACE(REPLACE(TRIM(nch.session_id), CHR(10), ''), CHR(13), '') = TRIM(hgr.chat_id)\n  AND hgr.criado_em < CURRENT_DATE - INTERVAL '1 days';\n\n\nDELETE FROM historico_gestao_rural\nWHERE criado_em < CURRENT_DATE - INTERVAL '1 days';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        220,
+        0
+      ],
+      "id": "52f8e981-d45d-402f-a26a-a43f6ddb8bb5",
+      "name": "deletar_dados_antigos",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "deletar_dados_antigos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "6f273bc7-ffb4-4818-8886-e908bff2af40",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9aab45911b97299333480ee93b3a756a301732a8d3c5c2882e1becb4b9fe223a"
+  },
+  "id": "uXS7HFAq1HGlIXkC",
+  "tags": []
+}

@@ -1,0 +1,120 @@
+{
+  "name": "Retornar_erro_workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "erro",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f251271d-e83d-4a39-9920-b893fb87c86a",
+      "name": "Webhook",
+      "webhookId": "8976fd9d-403b-469f-b68c-fbadd93b907e"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Webhook').first().json.body.chat_id }}",
+        "text": "Desculpe, ocorreu um erro interno. Tente novamente mais tarde.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        0
+      ],
+      "id": "047ceddb-ed1f-4a36-a713-05be9370afc0",
+      "name": "retorna_erro_workflow",
+      "webhookId": "6cb07859-345a-451d-9b64-26e02e8b563d",
+      "credentials": {
+        "telegramApi": {
+          "id": "iuLO2FKzmR3ohEKO",
+          "name": "GestaoRuralBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "historico_gestao_rural",
+          "mode": "list",
+          "cachedResultName": "historico_gestao_rural"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "chat_id",
+              "value": "={{ $('Webhook').first().json.body.chat_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        460,
+        0
+      ],
+      "id": "3e55a9eb-ce79-46ec-a0d8-14064d32f03a",
+      "name": "deletar_historico",
+      "credentials": {
+        "postgres": {
+          "id": "Sbkkcbe1C8LiOSmB",
+          "name": "gestao_rural"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "retorna_erro_workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "retorna_erro_workflow": {
+      "main": [
+        [
+          {
+            "node": "deletar_historico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9fc10e40-2c85-4921-b7ad-7a18f855cc83",
+  "meta": {
+    "instanceId": "9aab45911b97299333480ee93b3a756a301732a8d3c5c2882e1becb4b9fe223a"
+  },
+  "id": "Fl6ZbgGtJ856D7BL",
+  "tags": []
+}
