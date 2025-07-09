@@ -136,7 +136,7 @@ No site também é possível **cadastrar novas propriedades** e **vincular regis
 ## 🧪 Teste agora
 
 - Acesse o site: [https://gestao-rural.lovable.app](https://gestao-rural.lovable.app)
-- Converse com o bot: [@GestaoRuralBot](https://t.me/GestaoRuralBot)
+- Converse com o bot: [@GestaoRuralBot](https://web.telegram.org/k/#@gestao_rural_bot)
 
 <br/>
 
