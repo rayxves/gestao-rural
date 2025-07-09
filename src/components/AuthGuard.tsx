@@ -26,10 +26,10 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const userIdFromUrl = urlParams.get('user_id');
   const hasUserIdInUrl = !!(userIdFromUrl || userId);
 
-  // Aguardar carregamento completo: tanto auth quanto colaborador devem estar prontos
-  const isFullyLoaded = !authLoading && collaboratorInitialized;
+  // AGUARDAR carregamento completo
+  const isFullyLoaded = !authLoading && collaboratorInitialized && !collaboratorLoading;
 
-  console.log('AuthGuard Estado:', {
+  console.log('🛡️ AuthGuard Estado Detalhado:', {
     authLoading,
     collaboratorLoading,
     collaboratorInitialized,
@@ -40,12 +40,14 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     collaboratorError,
     isFullyLoaded,
     currentPath: location.pathname,
-    urlParams: location.search
+    urlParams: location.search,
+    userIdFromUrl,
+    storedUserId: userId
   });
 
-  // Aguardar carregamento completo antes de tomar qualquer decisão
+  // LOADING: Aguardar carregamento completo
   if (!isFullyLoaded) {
-    console.log('AuthGuard: Aguardando carregamento completo...');
+    console.log('⏳ AuthGuard: Aguardando carregamento completo...');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -56,9 +58,9 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     );
   }
 
-  // Se há erro na verificação de colaborador e não há usuário logado
+  // ERRO: Se há erro na verificação de colaborador e não há usuário logado
   if (collaboratorError && !user) {
-    console.log('AuthGuard: Erro na verificação de colaborador:', collaboratorError);
+    console.log('❌ AuthGuard: Erro na verificação de colaborador:', collaboratorError);
     return (
       <Layout>
         <div className="min-h-[80vh] flex items-center justify-center px-4">
@@ -71,7 +73,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
                 Erro de Acesso
               </h2>
               <p className="text-gray-600">
-                Ocorreu um erro ao verificar suas permissões. Tente novamente ou entre em contato com o suporte.
+                {collaboratorError}
               </p>
             </div>
             
@@ -89,26 +91,26 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     );
   }
 
-  // Se é colaborador válido, permitir acesso
+  // SUCESSO: Colaborador válido identificado
   if (isCollaborator && collaboratorData) {
-    console.log('AuthGuard: Acesso permitido para colaborador:', collaboratorData.username);
+    console.log('✅ AuthGuard: Acesso permitido para COLABORADOR:', collaboratorData.username);
     return <>{children}</>;
   }
 
-  // Se usuário logado → renderizar normalmente
+  // SUCESSO: Usuário logado (produtor)
   if (user) {
-    console.log('AuthGuard: Acesso permitido para usuário logado');
+    console.log('✅ AuthGuard: Acesso permitido para PRODUTOR LOGADO');
     return <>{children}</>;
   }
 
-  // Se usuário NÃO logado E URL contém user_id → redirecionar para /login
+  // REDIRECIONAMENTO: Usuário não logado com user_id na URL
   if (!user && hasUserIdInUrl) {
-    console.log('AuthGuard: Redirecionando para login (URL contém user_id)');
+    console.log('🔀 AuthGuard: Redirecionando para login (URL contém user_id)');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Se usuário NÃO logado E URL NÃO contém user_id → mostrar mensagem padrão
-  console.log('AuthGuard: Mostrando página de boas-vindas');
+  // PÁGINA INICIAL: Usuário não identificado
+  console.log('🏠 AuthGuard: Mostrando página de boas-vindas');
   return (
     <Layout>
       <div className="min-h-[80vh] flex items-center justify-center px-4">

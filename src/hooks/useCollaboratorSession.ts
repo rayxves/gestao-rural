@@ -30,6 +30,7 @@ export const useCollaboratorSession = () => {
 
   const checkCollaboratorAuth = useCallback(async () => {
     console.log('=== INÍCIO DA VERIFICAÇÃO DE COLABORADOR ===');
+    console.log('Location atual:', { pathname: location.pathname, search: location.search });
     
     try {
       setState(prev => ({ 
@@ -39,23 +40,22 @@ export const useCollaboratorSession = () => {
         isInitialized: false 
       }));
 
-      // Aguardar um ciclo de event loop para garantir que a URL esteja totalmente carregada
-      await new Promise(resolve => setTimeout(resolve, 0));
+      // Extração corrigida dos parâmetros da URL
+      const searchParams = new URLSearchParams(location.search);
+      const userIdFromUrl = searchParams.get('user_id');
+      const produtorIdFromUrl = searchParams.get('produtor_id');
 
-      const urlParams = new URLSearchParams(location.search);
-      const userIdFromUrl = urlParams.get('user_id');
-      const produtorIdFromUrl = urlParams.get('produtor_id');
-
-      console.log('Parâmetros da URL extraídos:', { 
+      console.log('Parâmetros da URL extraídos CORRIGIDOS:', { 
         userIdFromUrl, 
         produtorIdFromUrl,
         fullSearch: location.search,
-        pathname: location.pathname
+        pathname: location.pathname,
+        allParams: Object.fromEntries(searchParams.entries())
       });
 
-      // Verificar se há parâmetros na URL
+      // PRIMEIRO: Verificar se há parâmetros na URL para colaborador
       if (userIdFromUrl && produtorIdFromUrl) {
-        console.log('Verificando colaborador via URL...');
+        console.log('=== VERIFICAÇÃO VIA PARÂMETROS DA URL ===');
         
         const produtorIdInt = parseInt(produtorIdFromUrl);
         
@@ -80,6 +80,8 @@ export const useCollaboratorSession = () => {
           .eq('produtor_id', produtorIdInt)
           .maybeSingle();
 
+        console.log('Resultado da busca colaborador:', { collaborator, error });
+
         if (error) {
           console.error('Erro ao buscar colaborador:', error);
           setState({
@@ -102,7 +104,7 @@ export const useCollaboratorSession = () => {
           // Armazenar dados do colaborador no localStorage
           localStorage.setItem('collaborator_data', JSON.stringify(collaboratorInfo));
           
-          console.log('Colaborador autenticado via URL:', collaboratorInfo);
+          console.log('✅ COLABORADOR AUTENTICADO VIA URL:', collaboratorInfo);
           setState({
             collaboratorData: collaboratorInfo,
             isCollaborator: true,
@@ -112,31 +114,23 @@ export const useCollaboratorSession = () => {
           });
           return;
         } else {
-          console.log('Colaborador não encontrado na base de dados');
-          // Limpar localStorage se não encontrou na base
+          console.log('❌ Colaborador não encontrado na base de dados para URL params');
           localStorage.removeItem('collaborator_data');
-          setState({
-            collaboratorData: null,
-            isCollaborator: false,
-            isLoading: false,
-            isInitialized: true,
-            error: null
-          });
-          return;
         }
       }
 
-      // Se não há parâmetros na URL, tentar recuperar do localStorage
-      console.log('Tentando recuperar colaborador do localStorage...');
+      // SEGUNDO: Se não há parâmetros na URL, tentar recuperar do localStorage
+      console.log('=== VERIFICAÇÃO VIA LOCALSTORAGE ===');
       const storedData = localStorage.getItem('collaborator_data');
       
       if (storedData) {
         try {
           const collaboratorInfo: CollaboratorData = JSON.parse(storedData);
+          console.log('Dados do localStorage:', collaboratorInfo);
           
-          // Validar dados do localStorage
+          // Validar estrutura dos dados
           if (collaboratorInfo.userId && collaboratorInfo.produtorId && collaboratorInfo.username) {
-            console.log('Colaborador recuperado do localStorage:', collaboratorInfo);
+            console.log('Validando dados do localStorage no Supabase...');
             
             // Verificar se os dados do localStorage ainda são válidos no Supabase
             const { data: collaborator, error: validationError } = await supabase
@@ -146,29 +140,24 @@ export const useCollaboratorSession = () => {
               .eq('produtor_id', collaboratorInfo.produtorId)
               .maybeSingle();
 
+            console.log('Validação localStorage:', { collaborator, validationError });
+
             if (validationError || !collaborator) {
-              console.log('Dados do localStorage inválidos, removendo...');
+              console.log('❌ Dados do localStorage inválidos, removendo...');
               localStorage.removeItem('collaborator_data');
+            } else {
+              console.log('✅ COLABORADOR RECUPERADO DO LOCALSTORAGE E VALIDADO');
               setState({
-                collaboratorData: null,
-                isCollaborator: false,
+                collaboratorData: collaboratorInfo,
+                isCollaborator: true,
                 isLoading: false,
                 isInitialized: true,
                 error: null
               });
               return;
             }
-
-            setState({
-              collaboratorData: collaboratorInfo,
-              isCollaborator: true,
-              isLoading: false,
-              isInitialized: true,
-              error: null
-            });
-            return;
           } else {
-            console.log('Dados do localStorage incompletos, removendo...');
+            console.log('❌ Dados do localStorage incompletos, removendo...');
             localStorage.removeItem('collaborator_data');
           }
         } catch (error) {
@@ -177,8 +166,8 @@ export const useCollaboratorSession = () => {
         }
       }
 
-      // Nenhum colaborador encontrado
-      console.log('Nenhum colaborador encontrado');
+      // TERCEIRO: Nenhum colaborador encontrado - finalizar como não-colaborador
+      console.log('=== FINALIZADO: NÃO É COLABORADOR ===');
       setState({
         collaboratorData: null,
         isCollaborator: false,
@@ -188,7 +177,7 @@ export const useCollaboratorSession = () => {
       });
 
     } catch (error) {
-      console.error('Erro na autenticação do colaborador:', error);
+      console.error('❌ Erro na autenticação do colaborador:', error);
       setState({
         collaboratorData: null,
         isCollaborator: false,
@@ -202,6 +191,7 @@ export const useCollaboratorSession = () => {
   }, [location.search, location.pathname]);
 
   useEffect(() => {
+    console.log('🔄 useCollaboratorSession: Effect disparado');
     checkCollaboratorAuth();
   }, [checkCollaboratorAuth]);
 
@@ -216,6 +206,16 @@ export const useCollaboratorSession = () => {
     });
     console.log('Sessão do colaborador limpa');
   }, []);
+
+  // Log do estado atual
+  console.log('useCollaboratorSession Estado Final:', {
+    isCollaborator: state.isCollaborator,
+    hasCollaboratorData: !!state.collaboratorData,
+    isLoading: state.isLoading,
+    isInitialized: state.isInitialized,
+    error: state.error,
+    collaboratorData: state.collaboratorData
+  });
 
   return {
     collaboratorData: state.collaboratorData,

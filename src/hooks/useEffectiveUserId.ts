@@ -31,9 +31,14 @@ export const useEffectiveUserId = () => {
 
   useEffect(() => {
     const determineEffectiveUserId = async () => {
-      // Aguardar inicialização completa do colaborador
+      console.log('🔍 useEffectiveUserId: Iniciando determinação...');
+      
+      // ESPERAR inicialização completa do colaborador
       if (!collaboratorInitialized || collaboratorLoading) {
-        console.log('useEffectiveUserId: Aguardando inicialização do colaborador...');
+        console.log('⏳ useEffectiveUserId: Aguardando inicialização do colaborador...', {
+          collaboratorInitialized,
+          collaboratorLoading
+        });
         setState(prev => ({ ...prev, isReady: false }));
         return;
       }
@@ -41,9 +46,9 @@ export const useEffectiveUserId = () => {
       try {
         setState(prev => ({ ...prev, error: null }));
 
-        // Se é colaborador, buscar o userId do produtor
+        // CASO 1: É colaborador autenticado
         if (isCollaborator && collaboratorData) {
-          console.log('useEffectiveUserId: Resolvendo userId do produtor para colaborador:', collaboratorData);
+          console.log('👥 useEffectiveUserId: COLABORADOR detectado:', collaboratorData);
           
           const { data: producer, error: producerError } = await supabase
             .from('usuario')
@@ -52,7 +57,7 @@ export const useEffectiveUserId = () => {
             .maybeSingle();
 
           if (producerError || !producer) {
-            console.error('useEffectiveUserId: Erro ao buscar produtor:', producerError);
+            console.error('❌ useEffectiveUserId: Erro ao buscar produtor:', producerError);
             setState({
               effectiveUserId: null,
               isReady: true,
@@ -62,42 +67,42 @@ export const useEffectiveUserId = () => {
             return;
           }
 
-          console.log('useEffectiveUserId: UserId do produtor encontrado:', producer.user_id);
+          console.log('✅ useEffectiveUserId: UserId do produtor encontrado:', producer.user_id);
           setState({
             effectiveUserId: producer.user_id,
             isReady: true,
-            userType: 'collaborator',
+            userType: 'collaborator', // TIPO CORRETO para colaborador
             error: null
           });
           return;
         }
 
-        // Se é usuário logado (produtor)
+        // CASO 2: É usuário autenticado (produtor)
         if (user) {
-          console.log('useEffectiveUserId: Usuário logado (produtor):', user.id);
+          console.log('🏢 useEffectiveUserId: PRODUTOR LOGADO detectado:', user.id);
           setState({
             effectiveUserId: user.id,
             isReady: true,
-            userType: 'producer',
+            userType: 'producer', // TIPO CORRETO para produtor
             error: null
           });
           return;
         }
 
-        // Se tem userId na sessão mas não é colaborador nem usuário logado
+        // CASO 3: Sessão com userId (produtor via URL/localStorage)
         if (userId) {
-          console.log('useEffectiveUserId: UserId da sessão:', userId);
+          console.log('🔗 useEffectiveUserId: PRODUTOR VIA SESSÃO detectado:', userId);
           setState({
             effectiveUserId: userId,
             isReady: true,
-            userType: 'producer',
+            userType: 'producer', // TIPO CORRETO para produtor
             error: null
           });
           return;
         }
 
-        // Nenhum usuário identificado
-        console.log('useEffectiveUserId: Nenhum usuário identificado');
+        // CASO 4: Nenhum usuário identificado
+        console.log('❓ useEffectiveUserId: Nenhum usuário identificado');
         setState({
           effectiveUserId: null,
           isReady: true,
@@ -106,7 +111,7 @@ export const useEffectiveUserId = () => {
         });
 
       } catch (error) {
-        console.error('useEffectiveUserId: Erro ao determinar userId efetivo:', error);
+        console.error('❌ useEffectiveUserId: Erro ao determinar userId efetivo:', error);
         setState({
           effectiveUserId: null,
           isReady: true,
@@ -119,15 +124,19 @@ export const useEffectiveUserId = () => {
     determineEffectiveUserId();
   }, [isCollaborator, collaboratorData, collaboratorInitialized, collaboratorLoading, user, userId]);
 
-  console.log('useEffectiveUserId state:', {
+  console.log('🏁 useEffectiveUserId Estado Final:', {
     effectiveUserId: state.effectiveUserId,
     isReady: state.isReady,
     userType: state.userType,
-    isCollaborator,
-    collaboratorInitialized,
-    collaboratorLoading,
-    hasUser: !!user,
-    hasUserId: !!userId
+    error: state.error,
+    dependencies: {
+      isCollaborator,
+      hasCollaboratorData: !!collaboratorData,
+      collaboratorInitialized,
+      collaboratorLoading,
+      hasUser: !!user,
+      hasUserId: !!userId
+    }
   });
 
   return state;
