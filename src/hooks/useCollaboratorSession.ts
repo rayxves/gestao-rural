@@ -197,6 +197,10 @@ export const useCollaboratorSession = () => {
 
   const clearCollaboratorSession = useCallback(() => {
     localStorage.removeItem('collaborator_data');
+    const storedUserId = localStorage.getItem('gestao_rural_user_id');
+    if (storedUserId) {
+       localStorage.removeItem('gestao_rural_user_id');
+    } 
     setState({
       collaboratorData: null,
       isCollaborator: false,
