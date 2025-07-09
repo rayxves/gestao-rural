@@ -1,11 +1,9 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useUserSession } from '@/hooks/useUserSession';
 import { useAuth } from '@/hooks/useAuth';
-import { Menu, X, LogIn, UserPlus } from 'lucide-react';
 import { useCollaboratorSession } from '@/hooks/useCollaboratorSession';
-
+import { Menu, X, LogIn, UserPlus } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -15,6 +13,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const { userId, clearUserId } = useUserSession();
   const { user, logout } = useAuth();
+  const { isCollaborator, isLoading, isInitialized } = useCollaboratorSession(); // Adicionado isLoading e isInitialized
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const currentUser = user || (userId ? { user_id: userId } : null);
@@ -40,7 +39,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     setIsMenuOpen(false);
   };
 
-  const navItems = [
+  const producerNavItems = [
     { path: '/tabelas', label: 'Registros', icon: '📊' },
     { path: '/graficos', label: 'Análises', icon: '📈' },
     { path: '/dados-climaticos', label: 'Clima', icon: '🌤️' },
@@ -48,6 +47,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     { path: '/cadastro-propriedade', label: 'Propriedade', icon: '🏡' },
     { path: '/vincular-propriedade', label: 'Vincular', icon: '🔗' },
   ];
+  
+  const collaboratorNavItems = [
+    { path: '/tabelas', label: 'Registros', icon: '📊' },
+    { path: '/upload', label: 'Upload', icon: '📤' },
+  ];
+
+  const navItems = isCollaborator ? collaboratorNavItems : producerNavItems;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-emerald-50">
@@ -96,23 +102,29 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               )}
 
               {/* Menu Button */}
-              <button
-                onClick={toggleMenu}
-                className="p-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 transition-all duration-200"
-                title="Menu de navegação"
-              >
-                {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </button>
+              {currentUser && (
+                <button
+                  onClick={toggleMenu}
+                  className="p-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 transition-all duration-200"
+                  title="Menu de navegação"
+                >
+                  {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Compact Dropdown Menu - positioned as navbar extension */}
+          {/* Compact Dropdown Menu */}
           {isMenuOpen && (
             <div className="absolute top-full left-0 right-0 bg-white shadow-xl border-b border-slate-200 z-40">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                {currentUser ? (
+                {/* Aguarda a inicialização para renderizar o menu correto */}
+                {isLoading || !isInitialized ? (
+                  <div className="flex justify-center items-center p-4">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600"></div>
+                  </div>
+                ) : currentUser ? (
                   <>
-                    {/* Navigation menu for logged in users */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
                       {navItems.map((item) => (
                         <Link
@@ -131,7 +143,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                       ))}
                     </div>
 
-                    {/* User Info */}
                     <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
@@ -150,7 +161,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                     </div>
                   </>
                 ) : (
-                  // Auth menu for non-logged users
                   <div className="flex justify-center space-x-4">
                     <Link
                       to="/login"
