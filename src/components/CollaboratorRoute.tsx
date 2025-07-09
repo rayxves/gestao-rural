@@ -43,7 +43,7 @@ export const CollaboratorRoute: React.FC<CollaboratorRouteProps> = ({
     allowedPaths
   });
 
-  // Se é colaborador
+  // CORREÇÃO: Se é colaborador válido, permitir acesso diretamente
   if (isCollaborator && collaboratorData) {
     // Verificar se a rota atual é permitida para colaboradores
     const currentPath = location.pathname;
@@ -58,13 +58,14 @@ export const CollaboratorRoute: React.FC<CollaboratorRouteProps> = ({
     return <>{children}</>;
   }
 
-  // Se é usuário normal (produtor), permitir acesso normal
+  // Se é usuário normal (produtor logado), permitir acesso normal
   if (user) {
-    console.log('CollaboratorRoute: Acesso permitido para usuário logado');
+    console.log('CollaboratorRoute: Acesso permitido para usuário logado (produtor)');
     return <>{children}</>;
   }
 
-  // Se não é nem colaborador nem usuário logado, redirecionar para login
-  console.log('CollaboratorRoute: Sem permissões, redirecionando para login');
+  // IMPORTANTE: Só redirecionar para login se NÃO for colaborador
+  // Se chegou aqui, não é nem colaborador válido nem usuário logado
+  console.log('CollaboratorRoute: Sem permissões válidas, redirecionando para login');
   return <Navigate to="/login" replace />;
 };
