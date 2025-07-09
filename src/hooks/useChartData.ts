@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 
-export const useChartData = (userId: string) => {
+export const useChartData = (_userId: string) => {
   const [salesData, setSalesData] = useState<any[]>([]);
   const [expensesByType, setExpensesByType] = useState<any[]>([]);
   const [plantingByArea, setPlantingByArea] = useState<any[]>([]);
@@ -13,18 +14,54 @@ export const useChartData = (userId: string) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const { effectiveUserId, isReady, userType, error: userIdError } = useEffectiveUserId();
+
   const fetchChartData = async () => {
-    if (!userId) return;
+    // Aguardar que o userId efetivo esteja pronto
+    if (!isReady) {
+      console.log('useChartData: Aguardando userId efetivo...');
+      setLoading(true);
+      return;
+    }
+
+    // Se há erro no userId, não prosseguir
+    if (userIdError) {
+      console.error('useChartData: Erro no userId:', userIdError);
+      setError(userIdError);
+      setLoading(false);
+      return;
+    }
+
+    // Se não há userId efetivo, limpar dados
+    if (!effectiveUserId) {
+      console.log('useChartData: Nenhum userId efetivo, limpando dados');
+      // Reset all states to empty
+      setSalesData([]);
+      setExpensesByType([]);
+      setPlantingByArea([]);
+      setHarvestByArea([]);
+      setInsumosPorTipo([]);
+      setInsumosGastoPorTipo([]);
+      setTrabalhoPorResponsavel([]);
+      setTrabalhoAoLongoDoTempo([]);
+      setLoading(false);
+      return;
+    }
 
     try {
       setLoading(true);
       setError(null);
 
+      console.log('useChartData: Buscando dados do gráfico para userId efetivo:', {
+        effectiveUserId,
+        userType
+      });
+
       // Fetch sales data
       const { data: vendaData, error: vendaError } = await supabase
         .from('venda')
         .select('cultura, valor_total')
-        .eq('user_id', userId);
+        .eq('user_id', effectiveUserId);
 
       if (vendaError) throw vendaError;
 
@@ -47,7 +84,7 @@ export const useChartData = (userId: string) => {
       const { data: gastoData, error: gastoError } = await supabase
         .from('gasto')
         .select('tipo, valor')
-        .eq('user_id', userId);
+        .eq('user_id', effectiveUserId);
 
       if (gastoError) throw gastoError;
 
@@ -70,7 +107,7 @@ export const useChartData = (userId: string) => {
       const { data: plantioData, error: plantioError } = await supabase
         .from('plantio')
         .select('cultura, area_plantada')
-        .eq('user_id', userId);
+        .eq('user_id', effectiveUserId);
 
       if (plantioError) throw plantioError;
 
@@ -93,7 +130,7 @@ export const useChartData = (userId: string) => {
       const { data: colheitaData, error: colheitaError } = await supabase
         .from('colheita')
         .select('cultura, quantidade')
-        .eq('user_id', userId);
+        .eq('user_id', effectiveUserId);
 
       if (colheitaError) throw colheitaError;
 
@@ -116,7 +153,7 @@ export const useChartData = (userId: string) => {
       const { data: insumoData, error: insumoError } = await supabase
         .from('insumo')
         .select('tipo, quantidade, preco_unitario')
-        .eq('user_id', userId);
+        .eq('user_id', effectiveUserId);
 
       if (insumoError) throw insumoError;
 
@@ -155,7 +192,7 @@ export const useChartData = (userId: string) => {
       const { data: trabalhoData, error: trabalhoError } = await supabase
         .from('trabalho')
         .select('responsavel, custo')
-        .eq('user_id', userId);
+        .eq('user_id', effectiveUserId);
 
       if (trabalhoError) throw trabalhoError;
 
@@ -178,7 +215,7 @@ export const useChartData = (userId: string) => {
       setTrabalhoAoLongoDoTempo([]);
 
     } catch (err) {
-      console.error('Error fetching chart data:', err);
+      console.error('useChartData: Error fetching chart data:', err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
     } finally {
       setLoading(false);
@@ -186,8 +223,13 @@ export const useChartData = (userId: string) => {
   };
 
   useEffect(() => {
+    console.log('useChartData: Effect triggered:', { 
+      effectiveUserId, 
+      isReady, 
+      userType 
+    });
     fetchChartData();
-  }, [userId]);
+  }, [effectiveUserId, isReady, userType]);
 
   return {
     salesData,

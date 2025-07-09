@@ -2,13 +2,16 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { DateFilterState } from '@/components/DateFilter';
+import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 
 export type TableType = 'plantio' | 'colheita' | 'venda' | 'gasto' | 'insumo' | 'trabalho';
 
-export const useRuralData = (tableType: TableType, userId: string, dateFilter?: DateFilterState) => {
+export const useRuralData = (tableType: TableType, _userId: string, dateFilter?: DateFilterState) => {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const { effectiveUserId, isReady, userType, error: userIdError } = useEffectiveUserId();
 
   const getDateRange = () => {
     const now = new Date();
@@ -47,10 +50,28 @@ export const useRuralData = (tableType: TableType, userId: string, dateFilter?: 
   };
 
   const fetchData = async () => {
-    if (!userId) {
-      console.log('No userId provided, skipping fetch');
+    // Aguardar que o userId efetivo esteja pronto
+    if (!isReady) {
+      console.log(`useRuralData (${tableType}): Aguardando userId efetivo...`);
+      setLoading(true);
+      return;
+    }
+
+    // Se há erro no userId, não prosseguir
+    if (userIdError) {
+      console.error(`useRuralData (${tableType}): Erro no userId:`, userIdError);
+      setError(userIdError);
       setData([]);
       setLoading(false);
+      return;
+    }
+
+    // Se não há userId efetivo, limpar dados
+    if (!effectiveUserId) {
+      console.log(`useRuralData (${tableType}): Nenhum userId efetivo, limpando dados`);
+      setData([]);
+      setLoading(false);
+      setError(null);
       return;
     }
 
@@ -58,34 +79,22 @@ export const useRuralData = (tableType: TableType, userId: string, dateFilter?: 
       setLoading(true);
       setError(null);
       
-      console.log(`Fetching ${tableType} data for user ${userId}`);
+      console.log(`useRuralData (${tableType}): Buscando dados para userId efetivo:`, {
+        effectiveUserId,
+        userType,
+        tableType
+      });
 
       const dateRange = getDateRange();
       const dateColumn = getDateColumn(tableType);
       
-      console.log('Date range:', { start: dateRange.start, end: dateRange.end });
-      console.log('Using date column:', dateColumn);
+      console.log(`useRuralData (${tableType}): Date range:`, { start: dateRange.start, end: dateRange.end });
+      console.log(`useRuralData (${tableType}): Using date column:`, dateColumn);
 
-      // First, let's try a simple query without date filters to debug
-      console.log('Testing simple query first...');
-      const { data: testResult, error: testError } = await supabase
-        .from(tableType)
-        .select('*')
-        .eq('user_id', userId)
-        .limit(5);
-
-      console.log('Test query result:', testResult);
-      console.log('Test query error:', testError);
-
-      if (testError) {
-        throw testError;
-      }
-
-      // Now apply date filters if the simple query works
       let query = supabase
         .from(tableType)
         .select('*')
-        .eq('user_id', userId);
+        .eq('user_id', effectiveUserId);
 
       // Apply date filters
       if (dateRange.start && dateColumn) {
@@ -99,15 +108,14 @@ export const useRuralData = (tableType: TableType, userId: string, dateFilter?: 
       const { data: result, error: queryError } = await query.order(dateColumn || 'id', { ascending: false });
 
       if (queryError) {
-        console.error('Query error:', queryError);
+        console.error(`useRuralData (${tableType}): Query error:`, queryError);
         throw queryError;
       }
 
-      console.log(`Fetched ${result?.length || 0} records for ${tableType}`);
-      console.log('Sample data:', result?.slice(0, 2));
+      console.log(`useRuralData (${tableType}): Fetched ${result?.length || 0} records`);
       setData(result || []);
     } catch (err) {
-      console.error(`Error fetching ${tableType} data:`, err);
+      console.error(`useRuralData (${tableType}): Error fetching data:`, err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
       setData([]);
     } finally {
@@ -134,9 +142,15 @@ export const useRuralData = (tableType: TableType, userId: string, dateFilter?: 
   };
 
   useEffect(() => {
-    console.log('useRuralData effect triggered:', { userId, tableType, dateFilter });
+    console.log(`useRuralData (${tableType}): Effect triggered:`, { 
+      effectiveUserId, 
+      isReady, 
+      userType, 
+      tableType, 
+      dateFilter 
+    });
     fetchData();
-  }, [userId, tableType, dateFilter]);
+  }, [effectiveUserId, isReady, userType, tableType, dateFilter]);
 
   return { data, loading, error, refetch: fetchData };
 };
