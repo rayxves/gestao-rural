@@ -11,10 +11,17 @@ export const useCollaboratorRuralData = (
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { collaboratorData, isCollaborator } = useCollaboratorSession();
+  const { collaboratorData, isCollaborator, isInitialized } = useCollaboratorSession();
 
   const fetchData = async () => {
+    // Aguardar inicialização antes de prosseguir
+    if (!isInitialized) {
+      console.log('Aguardando inicialização do colaborador...');
+      return;
+    }
+
     if (!isCollaborator || !collaboratorData) {
+      console.log('Não é colaborador, limpando dados...');
       setData([]);
       setLoading(false);
       return;
@@ -24,6 +31,8 @@ export const useCollaboratorRuralData = (
       setLoading(true);
       setError(null);
 
+      console.log('Buscando dados para colaborador:', collaboratorData);
+
       // Primeiro, buscar o user_id do produtor
       const { data: producer, error: producerError } = await supabase
         .from('usuario')
@@ -31,7 +40,6 @@ export const useCollaboratorRuralData = (
         .eq('id', collaboratorData.produtorId)
         .maybeSingle();
 
-      console.log("produtor encontrado: ", data);
       if (producerError || !producer) {
         console.error('Erro ao buscar produtor:', producerError);
         setError('Erro ao carregar dados do produtor');
@@ -41,13 +49,13 @@ export const useCollaboratorRuralData = (
       }
 
       const producerUserId = producer.user_id;
+      console.log('User ID do produtor encontrado:', producerUserId);
 
       let query = supabase
         .from(tableType)
         .select('*')
         .eq('user_id', producerUserId)
         .eq('registrado_por', collaboratorData.username);
-      console.log('colaborador encontrado: ', query)
 
       // Aplicar filtros de data baseados no tipo de tabela
       if (dateFilter.startDate && dateFilter.endDate) {
@@ -88,6 +96,7 @@ export const useCollaboratorRuralData = (
         setError(`Erro ao carregar dados de ${tableType}`);
         setData([]);
       } else {
+        console.log(`Dados de ${tableType} carregados:`, result?.length || 0, 'registros');
         setData(result || []);
       }
     } catch (error) {
@@ -101,7 +110,7 @@ export const useCollaboratorRuralData = (
 
   useEffect(() => {
     fetchData();
-  }, [tableType, dateFilter, collaboratorData, isCollaborator]);
+  }, [tableType, dateFilter, collaboratorData, isCollaborator, isInitialized]);
 
   return {
     data,

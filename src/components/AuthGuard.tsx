@@ -13,40 +13,98 @@ interface AuthGuardProps {
 export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const { user, isLoading: authLoading } = useAuth();
   const { userId } = useUserSession();
-  const { isCollaborator, collaboratorData, isLoading: collaboratorLoading } = useCollaboratorSession();
+  const { 
+    isCollaborator, 
+    collaboratorData, 
+    isLoading: collaboratorLoading, 
+    isInitialized: collaboratorInitialized,
+    error: collaboratorError 
+  } = useCollaboratorSession();
   const location = useLocation();
 
   const urlParams = new URLSearchParams(location.search);
   const userIdFromUrl = urlParams.get('user_id');
   const hasUserIdInUrl = !!(userIdFromUrl || userId);
 
+  // Aguardar carregamento de ambos os sistemas
+  const isLoading = authLoading || collaboratorLoading || !collaboratorInitialized;
 
-  const isLoading = authLoading || collaboratorLoading;
+  console.log('AuthGuard Estado:', {
+    authLoading,
+    collaboratorLoading,
+    collaboratorInitialized,
+    isCollaborator,
+    hasCollaboratorData: !!collaboratorData,
+    hasUser: !!user,
+    hasUserIdInUrl,
+    collaboratorError
+  });
 
   if (isLoading) {
+    console.log('AuthGuard: Aguardando carregamento...');
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
+          <p className="text-gray-600">Verificando permissões...</p>
+        </div>
       </div>
     );
   }
 
-  // Se é colaborador, permitir acesso
+  // Se há erro na verificação de colaborador e não há usuário logado
+  if (collaboratorError && !user) {
+    console.log('AuthGuard: Erro na verificação de colaborador:', collaboratorError);
+    return (
+      <Layout>
+        <div className="min-h-[80vh] flex items-center justify-center px-4">
+          <div className="max-w-md w-full text-center space-y-6">
+            <div className="space-y-4">
+              <div className="w-20 h-20 bg-red-100 rounded-2xl flex items-center justify-center mx-auto">
+                <span className="text-red-600 text-3xl">⚠️</span>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900">
+                Erro de Acesso
+              </h2>
+              <p className="text-gray-600">
+                Ocorreu um erro ao verificar suas permissões. Tente novamente ou entre em contato com o suporte.
+              </p>
+            </div>
+            
+            <div className="space-y-4">
+              <Link 
+                to="/login" 
+                className="block w-full bg-emerald-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-emerald-700 transition-colors"
+              >
+                Fazer Login
+              </Link>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Se é colaborador válido, permitir acesso
   if (isCollaborator && collaboratorData) {
+    console.log('AuthGuard: Acesso permitido para colaborador:', collaboratorData.username);
     return <>{children}</>;
   }
 
   // Se usuário logado → renderizar normalmente
   if (user) {
+    console.log('AuthGuard: Acesso permitido para usuário logado');
     return <>{children}</>;
   }
 
   // Se usuário NÃO logado E URL contém user_id → redirecionar para /login
   if (!user && hasUserIdInUrl) {
+    console.log('AuthGuard: Redirecionando para login (URL contém user_id)');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Se usuário NÃO logado E URL NÃO contém user_id → mostrar mensagem padrão
+  console.log('AuthGuard: Mostrando página de boas-vindas');
   return (
     <Layout>
       <div className="min-h-[80vh] flex items-center justify-center px-4">
