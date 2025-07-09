@@ -13,12 +13,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const { userId, clearUserId } = useUserSession();
   const { user, logout } = useAuth();
-  const { isCollaborator, isLoading, isInitialized } = useCollaboratorSession();
+  const { isCollaborator, isInitialized } = useCollaboratorSession(); // Apenas precisamos destes dois
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [navItems, setNavItems] = useState<any[]>([]); // Estado para controlar os itens de navegação
+  const [navItems, setNavItems] = useState<any[]>([]); // Estado para os itens do menu
 
   const currentUser = user || (userId ? { user_id: userId } : null);
 
+  // Define os menus disponíveis
   const producerNavItems = [
     { path: '/tabelas', label: 'Registros', icon: '📊' },
     { path: '/graficos', label: 'Análises', icon: '📈' },
@@ -33,8 +34,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     { path: '/upload', label: 'Upload', icon: '📤' },
   ];
 
-  // Efeito para definir os itens do menu apenas quando a sessão estiver inicializada
+  // Efeito que "escuta" a inicialização para definir o menu correto
   useEffect(() => {
+    // Só atualiza o menu se a verificação de sessão foi concluída
     if (isInitialized) {
       if (isCollaborator) {
         setNavItems(collaboratorNavItems);
@@ -42,8 +44,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         setNavItems(producerNavItems);
       }
     }
-  }, [isCollaborator, isInitialized]);
-
+  }, [isCollaborator, isInitialized]); // Dependências corretas
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -68,11 +69,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-emerald-50">
-      {/* Compact Navbar */}
       <nav className="bg-white/95 backdrop-blur-md shadow-lg border-b border-slate-200/50 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            {/* Logo Section */}
             <div className="flex items-center space-x-3">
               <div className="relative flex-shrink-0">
                 <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
@@ -90,9 +89,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               </div>
             </div>
             
-            {/* Right Section */}
             <div className="flex items-center space-x-4">
-              {/* Auth Links (when not logged in) */}
               {!currentUser && (
                 <div className="hidden sm:flex items-center space-x-2">
                   <Link
@@ -112,7 +109,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </div>
               )}
 
-              {/* Menu Button - Apenas mostra se estiver logado */}
               {currentUser && (
                 <button
                   onClick={toggleMenu}
@@ -125,18 +121,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             </div>
           </div>
 
-          {/* Compact Dropdown Menu */}
           {isMenuOpen && (
             <div className="absolute top-full left-0 right-0 bg-white shadow-xl border-b border-slate-200 z-40">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                 {currentUser ? (
                   <>
-                    {/* Mostra um loader enquanto a sessão está sendo verificada */}
-                    {isLoading || !isInitialized ? (
-                      <div className="flex justify-center items-center p-4">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600"></div>
-                      </div>
-                    ) : (
+                    {/* Renderiza o menu APENAS se estiver inicializado */}
+                    {isInitialized ? (
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
                         {navItems.map((item) => (
                           <Link
@@ -153,6 +144,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                             <span className="font-medium text-sm">{item.label}</span>
                           </Link>
                         ))}
+                      </div>
+                    ) : (
+                      <div className="flex justify-center items-center p-4">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600"></div>
                       </div>
                     )}
 
@@ -199,7 +194,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </nav>
 
-      {/* Main content */}
       <main className="max-w-7xl mx-auto py-6 lg:py-8 px-4 sm:px-6 lg:px-8">
         {children}
       </main>
