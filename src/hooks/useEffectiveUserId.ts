@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/hooks/useAuth';
 import { useCollaboratorSession } from '@/hooks/useCollaboratorSession';
 import { useUserSession } from '@/hooks/useUserSession';
@@ -32,8 +33,12 @@ export const useEffectiveUserId = () => {
     const determineEffectiveUserId = async () => {
       console.log('🔍 useEffectiveUserId: Iniciando determinação...');
       
+      // ESPERAR inicialização completa do colaborador
       if (!collaboratorInitialized || collaboratorLoading) {
-        console.log('⏳ useEffectiveUserId: Aguardando inicialização do colaborador...');
+        console.log('⏳ useEffectiveUserId: Aguardando inicialização do colaborador...', {
+          collaboratorInitialized,
+          collaboratorLoading
+        });
         setState(prev => ({ ...prev, isReady: false }));
         return;
       }
@@ -66,19 +71,19 @@ export const useEffectiveUserId = () => {
           setState({
             effectiveUserId: producer.user_id,
             isReady: true,
-            userType: 'collaborator',
+            userType: 'collaborator', // TIPO CORRETO para colaborador
             error: null
           });
           return;
         }
 
-        // CASO 2: É usuário autenticado (produtor) - CORREÇÃO APLICADA AQUI
-        if (user && user.user_id) {
-          console.log('🏢 useEffectiveUserId: PRODUTOR LOGADO detectado:', user.user_id);
+        // CASO 2: É usuário autenticado (produtor)
+        if (user) {
+          console.log('🏢 useEffectiveUserId: PRODUTOR LOGADO detectado:', user.id);
           setState({
-            effectiveUserId: user.user_id, // <<<-- AQUI ESTAVA O ERRO, AGORA CORRIGIDO
+            effectiveUserId: user.id,
             isReady: true,
-            userType: 'producer',
+            userType: 'producer', // TIPO CORRETO para produtor
             error: null
           });
           return;
@@ -90,7 +95,7 @@ export const useEffectiveUserId = () => {
           setState({
             effectiveUserId: userId,
             isReady: true,
-            userType: 'producer',
+            userType: 'producer', // TIPO CORRETO para produtor
             error: null
           });
           return;
