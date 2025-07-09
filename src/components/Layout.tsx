@@ -4,6 +4,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { useUserSession } from '@/hooks/useUserSession';
 import { useAuth } from '@/hooks/useAuth';
 import { Menu, X, LogIn, UserPlus } from 'lucide-react';
+import { useCollaboratorSession } from '@/hooks/useCollaboratorSession';
+
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -13,7 +15,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const { userId, clearUserId } = useUserSession();
   const { user, logout } = useAuth();
-  const { isCollaborator } = useCollaboratorSession();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const currentUser = user || (userId ? { user_id: userId } : null);
@@ -39,7 +40,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     setIsMenuOpen(false);
   };
 
-  const allNavItems = [
+  const navItems = [
     { path: '/tabelas', label: 'Registros', icon: '📊' },
     { path: '/graficos', label: 'Análises', icon: '📈' },
     { path: '/dados-climaticos', label: 'Clima', icon: '🌤️' },
@@ -47,13 +48,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     { path: '/cadastro-propriedade', label: 'Propriedade', icon: '🏡' },
     { path: '/vincular-propriedade', label: 'Vincular', icon: '🔗' },
   ];
-
-  const collaboratorNavItems = [
-    { path: '/tabelas', label: 'Registros', icon: '📊' },
-    { path: '/upload', label: 'Upload', icon: '📤' },
-  ];
-
-  const navItems = isCollaborator ? collaboratorNavItems : allNavItems;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-emerald-50">
