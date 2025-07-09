@@ -11,6 +11,13 @@ export const useUserSession = () => {
     // Try to get user_id from URL first (works on any route)
     const urlParams = new URLSearchParams(location.search);
     const userIdFromUrl = urlParams.get('user_id');
+    const producerIdFromUrl = urlParams.get('producer_id');
+    const storedData = localStorage.getItem('collaborator_data');
+
+    if (producerIdFromUrl || storedData) {
+      console.log('useUserSession: collab_data found:', storedData);
+      return;
+    }
     
     if (userIdFromUrl) {
       // Save to localStorage and set state
