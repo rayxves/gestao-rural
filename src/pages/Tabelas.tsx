@@ -341,7 +341,6 @@ const Tabelas = () => {
             </div>
           )}
 
-          {!isCollaborator && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
             <div className="bg-gradient-to-r from-green-100 to-emerald-100 rounded-xl p-4 sm:p-6 border border-green-200">
               <div className="flex items-center justify-between">
@@ -396,7 +395,7 @@ const Tabelas = () => {
               </div>
             </div>
           </div>
-          )};
+
           <div className="mb-6 sm:mb-8">
             <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-4">Tipo de Registro</h2>
             <p className="text-gray-600 mb-3 sm:mb-4 text-sm sm:text-base">Escolha uma categoria para visualizar os dados</p>

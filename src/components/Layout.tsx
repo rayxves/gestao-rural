@@ -4,8 +4,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { useUserSession } from '@/hooks/useUserSession';
 import { useAuth } from '@/hooks/useAuth';
 import { Menu, X, LogIn, UserPlus } from 'lucide-react';
-import { useCollaboratorSession } from '@/hooks/useCollaboratorSession';
-
 
 interface LayoutProps {
   children: React.ReactNode;
