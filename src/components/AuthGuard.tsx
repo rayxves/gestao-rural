@@ -26,8 +26,8 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const userIdFromUrl = urlParams.get('user_id');
   const hasUserIdInUrl = !!(userIdFromUrl || userId);
 
-  // Aguardar carregamento de ambos os sistemas
-  const isLoading = authLoading || collaboratorLoading || !collaboratorInitialized;
+  // Aguardar carregamento completo: tanto auth quanto colaborador devem estar prontos
+  const isFullyLoaded = !authLoading && collaboratorInitialized;
 
   console.log('AuthGuard Estado:', {
     authLoading,
@@ -37,11 +37,15 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     hasCollaboratorData: !!collaboratorData,
     hasUser: !!user,
     hasUserIdInUrl,
-    collaboratorError
+    collaboratorError,
+    isFullyLoaded,
+    currentPath: location.pathname,
+    urlParams: location.search
   });
 
-  if (isLoading) {
-    console.log('AuthGuard: Aguardando carregamento...');
+  // Aguardar carregamento completo antes de tomar qualquer decisão
+  if (!isFullyLoaded) {
+    console.log('AuthGuard: Aguardando carregamento completo...');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
