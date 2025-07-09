@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
 interface CollaboratorData {
@@ -27,6 +27,7 @@ export const useCollaboratorSession = () => {
   });
   
   const location = useLocation();
+  const navigate = useNavigate();
 
   const checkCollaboratorAuth = useCallback(async () => {
     console.log('=== INÍCIO DA VERIFICAÇÃO DE COLABORADOR ===');
@@ -209,6 +210,7 @@ export const useCollaboratorSession = () => {
       error: null
     });
     console.log('Sessão do colaborador limpa');
+    navigate('/');
   }, []);
 
   // Log do estado atual
