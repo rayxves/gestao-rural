@@ -31,6 +31,7 @@ export const useCollaboratorRuralData = (
         .eq('id', collaboratorData.produtorId)
         .maybeSingle();
 
+      console.log("produtor encontrado: ", data);
       if (producerError || !producer) {
         console.error('Erro ao buscar produtor:', producerError);
         setError('Erro ao carregar dados do produtor');
@@ -46,6 +47,7 @@ export const useCollaboratorRuralData = (
         .select('*')
         .eq('user_id', producerUserId)
         .eq('registrado_por', collaboratorData.username);
+      console.log('colaborador encontrado: ', query)
 
       // Aplicar filtros de data baseados no tipo de tabela
       if (dateFilter.startDate && dateFilter.endDate) {

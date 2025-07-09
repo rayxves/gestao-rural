@@ -63,6 +63,7 @@ export const useCollaboratorSession = () => {
             const collaboratorInfo: CollaboratorData = JSON.parse(storedData);
             setCollaboratorData(collaboratorInfo);
             setIsCollaborator(true);
+            console.log('colaborador recuperado do localstorage')
           } catch (error) {
             console.error('Erro ao recuperar dados do colaborador:', error);
             localStorage.removeItem('collaborator_data');
