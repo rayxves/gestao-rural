@@ -1105,7 +1105,7 @@
     },
     {
       "parameters": {
-        "url": "=https://api.telegram.org/bot8018971565:AAGsIhlJ9bAuqmelTI48QvcftOsx4ut1C-8/getChatAdministrators?chat_id={{ $json.body.json.message.chat.id }}",
+        "url": "=https://api.telegram.org/[seu-token]/getChatAdministrators?chat_id={{ $json.body.json.message.chat.id }}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
