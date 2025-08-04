@@ -17,7 +17,7 @@ const Registro = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const userId = new URLSearchParams(location.search).get('user_id');
+  const userId = new URLSearchParams(location.search).get('user_id') ||  localStorage.getItem('gestao_rural_user_id');
 
   useEffect(() => {
     if (user) {
